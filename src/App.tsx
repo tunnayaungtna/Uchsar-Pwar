@@ -43,6 +43,8 @@ import {
   AlertCircle,
   Search,
   X,
+  Smartphone,
+  Share2,
 } from 'lucide-react';
 import {
   BarChart,
@@ -175,10 +177,74 @@ export default function App() {
   );
   const [hardwareBioSupported, setHardwareBioSupported] = useState<boolean>(false);
 
+  // PWA Install Prompt & Standalone State
+  const [pwaInstallPrompt, setPwaInstallPrompt] = useState<any>(() => {
+    return (window as any).__deferredPwaPrompt || null;
+  });
+  const [isStandaloneApp, setIsStandaloneApp] = useState<boolean>(() => {
+    try {
+      return (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        Boolean((window.navigator as any).standalone)
+      );
+    } catch {
+      return false;
+    }
+  });
+  const [showInstallGuideModal, setShowInstallGuideModal] = useState<boolean>(false);
+
   const showToast = (msg: string) => {
     setErrorBanner(null);
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  useEffect(() => {
+    const syncPrompt = () => {
+      if ((window as any).__deferredPwaPrompt) {
+        setPwaInstallPrompt((window as any).__deferredPwaPrompt);
+      }
+    };
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      (window as any).__deferredPwaPrompt = e;
+      setPwaInstallPrompt(e);
+    };
+    const handleAppInstalled = () => {
+      (window as any).__deferredPwaPrompt = null;
+      setPwaInstallPrompt(null);
+      setIsStandaloneApp(true);
+      setShowInstallGuideModal(false);
+      showToast('ဥစ္စာပွား App ကို ဖုန်းထဲသို့ သွင်းပြီးပါပြီ');
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('uchsar-pwa-prompt-ready', syncPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+    syncPrompt();
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('uchsar-pwa-prompt-ready', syncPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallAppClick = async () => {
+    const promptEvent = pwaInstallPrompt || (window as any).__deferredPwaPrompt;
+    if (promptEvent && typeof promptEvent.prompt === 'function') {
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          (window as any).__deferredPwaPrompt = null;
+          setPwaInstallPrompt(null);
+          showToast('ဥစ္စာပွား App ကို ဖုန်းထဲသို့ သွင်းနေပါသည်...');
+          return;
+        }
+      } catch {
+        // Fall through to guide modal
+      }
+    }
+    setShowInstallGuideModal(true);
   };
 
   const openAddModal = (type: TransactionType) => {
@@ -1362,6 +1428,19 @@ export default function App() {
                   </>
                 )}
               </button>
+
+              {!isStandaloneApp && (
+                <button
+                  type="button"
+                  onClick={handleInstallAppClick}
+                  aria-label="Install app on phone"
+                  title="ဖုန်းတွင် Application Icon ဖြင့် သွင်းရန်"
+                  className="h-8 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="hidden sm:inline">App သွင်းရန်</span>
+                </button>
+              )}
 
               <button
                 type="button"
@@ -2650,6 +2729,55 @@ export default function App() {
              ========================================================= */}
           {activeSection === 'settings' && (
             <div className="space-y-6">
+              {/* Card 0: Install App on Phone with Custom Icon */}
+              <div className="bg-white dark:bg-slate-900 border border-emerald-200/90 dark:border-emerald-800/80 rounded-2xl p-5 sm:p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <span className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400/70 bg-slate-900 shrink-0 inline-flex items-center justify-center shadow-sm">
+                      <img
+                        src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (!img.dataset.fallback) {
+                            img.dataset.fallback = '1';
+                            img.src =
+                              './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                          }
+                        }}
+                        alt="ဥစ္စာပွား App Icon"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover object-center scale-[1.16]"
+                      />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+                        ဖုန်းတွင် Application Icon ဖြင့် သွင်းရန် (Install App)
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {isStandaloneApp
+                          ? 'သင့်ဖုန်းတွင် ဥစ္စာပွား Application သွင်းထားပြီး ဖြစ်ပါသည်'
+                          : 'GitHub Link မှတစ်ဆင့် သင့်ဖုန်း Home Screen ပေါ်တွင် ဥစ္စာပွား Logo ဖြင့် App တစ်ခုကဲ့သို့ တိုက်ရိုက်ဖွင့်သုံးနိုင်ပါသည်'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleInstallAppClick}
+                      className="min-h-[42px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                    >
+                      <Smartphone className="w-4 h-4 shrink-0" />
+                      <span>
+                        {pwaInstallPrompt
+                          ? 'ယခု ဖုန်းထဲသို့ Install သွင်းမည်'
+                          : 'ဖုန်းတွင် Install သွင်းနည်း ကြည့်ရန်'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Card 1: Manual Backup & Restore */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
                 <div>
@@ -2875,6 +3003,119 @@ export default function App() {
           onSaveTransaction={handleSaveTransaction}
           onSaveHolding={handleSaveHolding}
         />
+
+        {/* Phone Home Screen Install Guide Modal */}
+        {showInstallGuideModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-amber-400/80 bg-slate-900 shrink-0 inline-flex items-center justify-center shadow-xs">
+                    <img
+                      src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (!img.dataset.fallback) {
+                          img.dataset.fallback = '1';
+                          img.src =
+                            './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                        }
+                      }}
+                      alt="ဥစ္စာပွား"
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover object-center scale-[1.16]"
+                    />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+                      ဥစ္စာပွား App ကို ဖုန်းတွင် သွင်းနည်း
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Application Icon Logo ဖြင့် Home Screen တွင် ထားရှိအသုံးပြုနိုင်ပါသည်
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowInstallGuideModal(false)}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer shrink-0"
+                  aria-label="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {pwaInstallPrompt && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 space-y-2.5">
+                  <div className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                    တိုက်ရိုက် Install သွင်းရန် အသင့်ရှိပါသည်
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleInstallAppClick}
+                    className="w-full min-h-[42px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Smartphone className="w-4 h-4 shrink-0" />
+                    <span>ယခု Install သွင်းမည် (Install App)</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Android Instructions */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                  <Smartphone className="w-4 h-4 shrink-0" />
+                  <span>Android ဖုန်း (Chrome Browser) တွင် သွင်းနည်း</span>
+                </div>
+                <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>
+                    GitHub Link ကို <strong>Google Chrome</strong> ဖြင့် ဖွင့်ပါ။
+                  </li>
+                  <li>
+                    ညာဘက်အပေါ်ထောင့်ရှိ အစက် (၃) စက် <strong>(⋮ Menu)</strong> ကို နှိပ်ပါ။
+                  </li>
+                  <li>
+                    <strong>&ldquo;Add to Home screen&rdquo;</strong> သို့မဟုတ်{' '}
+                    <strong>&ldquo;Install app&rdquo;</strong> ကို နှိပ်ပြီး <strong>Install</strong>{' '}
+                    လုပ်ပါ။
+                  </li>
+                </ol>
+              </div>
+
+              {/* iPhone / iPad Instructions */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-sky-700 dark:text-sky-400">
+                  <Share2 className="w-4 h-4 shrink-0" />
+                  <span>iPhone / iPad (Safari Browser) တွင် သွင်းနည်း</span>
+                </div>
+                <ol className="text-xs text-slate-700 dark:text-slate-300 space-y-1.5 list-decimal list-inside leading-relaxed">
+                  <li>
+                    GitHub Link ကို <strong>Safari</strong> Browser ဖြင့် ဖွင့်ပါ။
+                  </li>
+                  <li>
+                    အောက်ခြေအလယ်ရှိ <strong>Share ခလုတ်</strong> (လေးထောင့်ကွက်နှင့် အပေါ်မြားပုံ) ကို
+                    နှိပ်ပါ။
+                  </li>
+                  <li>
+                    အောက်သို့ဆွဲပြီး <strong>&ldquo;Add to Home Screen&rdquo;</strong> ကို နှိပ်ပါ။
+                  </li>
+                  <li>
+                    ညာဘက်အပေါ်ထောင့်ရှိ <strong>&ldquo;Add&rdquo;</strong> ကို နှိပ်လိုက်ပါက ဖုန်း
+                    Home Screen ပေါ်တွင် <strong>ဥစ္စာပွား Logo</strong> ဖြင့် ရောက်ရှိသွားပါမည်။
+                  </li>
+                </ol>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowInstallGuideModal(false)}
+                className="w-full min-h-[42px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+              >
+                နားလည်ပါပြီ (ပိတ်မည်)
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

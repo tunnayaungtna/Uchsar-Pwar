@@ -9,8 +9,39 @@
     <meta property="og:description" content="Personal expense, salary, remittance (SGD to MMK), stock & Bitcoin investment tracker for Myanmar professionals in Singapore with biometric WebAuthn lock." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" type="image/jpeg" href="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg" />
-    <link rel="apple-touch-icon" href="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg" />
+    <meta name="theme-color" content="#059669" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ဥစ္စာပွား" />
+    <link rel="manifest" href="./manifest.json" />
+    <link id="app-favicon" rel="icon" type="image/jpeg" href="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg" />
+    <link id="app-touch-icon" rel="apple-touch-icon" href="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg" />
+    <script>
+      window.__deferredPwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__deferredPwaPrompt = e;
+        window.dispatchEvent(new CustomEvent('uchsar-pwa-prompt-ready'));
+      });
+      (function () {
+        var primaryIcon = './assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+        var fallbackIcon = './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+        var testImg = new Image();
+        testImg.onerror = function () {
+          var fav = document.getElementById('app-favicon');
+          var touch = document.getElementById('app-touch-icon');
+          if (fav) fav.href = fallbackIcon;
+          if (touch) touch.href = fallbackIcon;
+        };
+        testImg.src = primaryIcon;
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
+          });
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
