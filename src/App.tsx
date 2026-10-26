@@ -171,7 +171,9 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Security Drafts
-  const [pinDraft, setPinDraft] = useState<string>(vaultConfig.pinCode || '2026');
+  const [currentPinDraft, setCurrentPinDraft] = useState<string>('');
+  const [pinDraft, setPinDraft] = useState<string>('');
+  const [securityFormError, setSecurityFormError] = useState<string | null>(null);
   const [autoLockDraft, setAutoLockDraft] = useState<string>(
     String(vaultConfig.autoLockMinutes || 15)
   );
@@ -275,7 +277,6 @@ export default function App() {
 
   useEffect(() => {
     setRateDraft(String(vaultConfig.sgdToMmkRate));
-    setPinDraft(vaultConfig.pinCode || '2026');
     setAutoLockDraft(String(vaultConfig.autoLockMinutes || 15));
     const currentSgdNum = parseFloat(calcSgd) || 0;
     setCalcLakhs(((currentSgdNum * vaultConfig.sgdToMmkRate) / 100000).toFixed(2));
@@ -1247,8 +1248,27 @@ export default function App() {
 
   const handleSaveSecuritySettings = async (e: React.FormEvent) => {
     e.preventDefault();
-    const sanitizedPin = (pinDraft.replace(/[^0-9]/g, '') || '2026').slice(0, 6);
+    setSecurityFormError(null);
+
+    const activePin = vaultConfig.pinCode || '2026';
+    const cleanCurrentPin = currentPinDraft.replace(/[^0-9]/g, '');
+    const cleanNewPin = pinDraft.replace(/[^0-9]/g, '');
     const sanitizedMinutes = Math.max(1, Math.min(1440, Number(autoLockDraft) || 15));
+
+    let nextPinToSave = activePin;
+
+    // If user is attempting to change the PIN, verify current PIN and new PIN length
+    if (cleanNewPin.length > 0 || cleanCurrentPin.length > 0) {
+      if (cleanCurrentPin !== activePin) {
+        setSecurityFormError('လက်ရှိ PIN နံပါတ် မှားယွင်းနေပါသည်။');
+        return;
+      }
+      if (cleanNewPin.length < 4 || cleanNewPin.length > 6) {
+        setSecurityFormError('PIN အသစ်သည် ဂဏန်း ၄ လုံးမှ ၆ လုံးအတွင်း ဖြစ်ရပါမည်။');
+        return;
+      }
+      nextPinToSave = cleanNewPin;
+    }
 
     if (currentUser) {
       const path = `vaultConfigs/${currentUser.uid}`;
@@ -1256,7 +1276,7 @@ export default function App() {
         await updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
           biometricEnabled: vaultConfig.biometricEnabled,
           passkeyId: vaultConfig.passkeyId || 'sim_bio_default',
-          pinCode: sanitizedPin,
+          pinCode: nextPinToSave,
           autoLockMinutes: sanitizedMinutes,
           updatedAt: serverTimestamp(),
         });
@@ -1266,12 +1286,19 @@ export default function App() {
     } else {
       setVaultConfig((prev) => ({
         ...prev,
-        pinCode: sanitizedPin,
+        pinCode: nextPinToSave,
         autoLockMinutes: sanitizedMinutes,
       }));
     }
-    setPinDraft(sanitizedPin);
-    showToast('PIN သိမ်းပြီးပါပြီ');
+
+    setCurrentPinDraft('');
+    setPinDraft('');
+    try {
+      localStorage.removeItem('uchsar_pin_security_state_v1');
+    } catch {
+      // ignore
+    }
+    showToast(cleanNewPin.length > 0 ? 'PIN နံပါတ်အသစ်နှင့် လုံခြုံရေးချိန်ညှိချက် သိမ်းပြီးပါပြီ' : 'Auto-Lock အချိန် သိမ်းပြီးပါပြီ');
   };
 
   if (isVaultLocked) {
@@ -2861,44 +2888,72 @@ export default function App() {
                 {/* Row 2: PIN Setting */}
                 <form
                   onSubmit={handleSaveSecuritySettings}
-                  className="flex flex-wrap items-end justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800"
+                  className="space-y-3 pb-5 border-b border-slate-100 dark:border-slate-800"
                 >
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
-                        လုံခြုံရေး PIN နံပါတ်
-                      </label>
-                      <input
-                        type="password"
-                        inputMode="numeric"
-                        maxLength={6}
-                        value={pinDraft}
-                        onChange={(e) => setPinDraft(e.target.value.replace(/[^0-9]/g, ''))}
-                        className="w-32 min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 font-mono-tabular text-sm"
-                      />
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          လက်ရှိ PIN နံပါတ်
+                        </label>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="••••"
+                          value={currentPinDraft}
+                          onChange={(e) => {
+                            setSecurityFormError(null);
+                            setCurrentPinDraft(e.target.value.replace(/[^0-9]/g, ''));
+                          }}
+                          className="w-32 min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 font-mono-tabular text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          PIN အသစ် (၄-၆ လုံး)
+                        </label>
+                        <input
+                          type="password"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="PIN အသစ်"
+                          value={pinDraft}
+                          onChange={(e) => {
+                            setSecurityFormError(null);
+                            setPinDraft(e.target.value.replace(/[^0-9]/g, ''));
+                          }}
+                          className="w-32 min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 font-mono-tabular text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                          Auto-Lock အချိန်
+                        </label>
+                        <select
+                          value={autoLockDraft}
+                          onChange={(e) => setAutoLockDraft(e.target.value)}
+                          className="min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 text-sm"
+                        >
+                          <option value="1">1 မိနစ်</option>
+                          <option value="5">5 မိနစ်</option>
+                          <option value="15">15 မိနစ်</option>
+                          <option value="30">30 မိနစ်</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
-                        Auto-Lock အချိန်
-                      </label>
-                      <select
-                        value={autoLockDraft}
-                        onChange={(e) => setAutoLockDraft(e.target.value)}
-                        className="min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 text-sm"
-                      >
-                        <option value="1">1 မိနစ်</option>
-                        <option value="5">5 မိနစ်</option>
-                        <option value="15">15 မိနစ်</option>
-                        <option value="30">30 မိနစ်</option>
-                      </select>
-                    </div>
+                    <button
+                      type="submit"
+                      className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white text-xs font-semibold cursor-pointer"
+                    >
+                      သိမ်းမည်
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white text-xs font-semibold cursor-pointer"
-                  >
-                    PIN သိမ်းမည်
-                  </button>
+                  {securityFormError && (
+                    <div className="text-xs text-red-600 dark:text-red-400 font-medium">
+                      {securityFormError}
+                    </div>
+                  )}
                 </form>
 
                 {/* Row 3: Google Cloud Backup */}
