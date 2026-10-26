@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "VaultConfig": {
+      "title": "VaultConfig",
+      "description": "User financial preferences, SGD to MMK exchange rate settings, and biometric lock configuration.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the authenticated owner",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sgdToMmkRate": {
+          "type": "number",
+          "description": "Current SGD to MMK market exchange rate (e.g. 3350 MMK per 1 SGD)"
+        },
+        "bankOfficialRate": {
+          "type": "number",
+          "description": "Reference official/remittance counter rate in MMK per 1 SGD"
+        },
+        "monthlySalarySgd": {
+          "type": "number",
+          "description": "Monthly base salary in Singapore Dollars"
+        },
+        "monthlyRentSgd": {
+          "type": "number",
+          "description": "Monthly room or HDB/Condo rent in Singapore Dollars"
+        },
+        "monthlySavingsTargetSgd": {
+          "type": "number",
+          "description": "Target monthly savings in Singapore Dollars"
+        },
+        "biometricEnabled": {
+          "type": "boolean",
+          "description": "Whether WebAuthn Biometric/Passkey lock is enabled"
+        },
+        "passkeyId": {
+          "type": "string",
+          "description": "Base64URL credential ID for registered WebAuthn passkey",
+          "maxLength": 256
+        },
+        "pinCode": {
+          "type": "string",
+          "description": "Hashed or 4-6 digit security fallback PIN",
+          "maxLength": 64
+        },
+        "autoLockMinutes": {
+          "type": "number",
+          "description": "Idle timeout in minutes before locking vault"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "sgdToMmkRate",
+        "bankOfficialRate",
+        "monthlySalarySgd",
+        "monthlyRentSgd",
+        "monthlySavingsTargetSgd",
+        "biometricEnabled",
+        "passkeyId",
+        "pinCode",
+        "autoLockMinutes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Daily income, Singapore expense, or Myanmar remittance entry with SGD and MMK amounts.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the authenticated owner",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "type": {
+          "type": "string",
+          "description": "Transaction flow type",
+          "enum": ["income", "expense", "remittance", "savings"],
+          "maxLength": 20
+        },
+        "category": {
+          "type": "string",
+          "description": "Expense or income category (Salary, Rent, Family Remittance, MRT & Bus, Phone & Internet, Food & Hawker, etc.)",
+          "maxLength": 60
+        },
+        "title": {
+          "type": "string",
+          "description": "Short description of transaction",
+          "maxLength": 120
+        },
+        "amountSgd": {
+          "type": "number",
+          "description": "Transaction amount in Singapore Dollars (SGD)"
+        },
+        "exchangeRateUsed": {
+          "type": "number",
+          "description": "SGD to MMK rate applied to this transaction"
+        },
+        "amountMmk": {
+          "type": "number",
+          "description": "Equivalent amount in Myanmar Kyat (MMK)"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO date string YYYY-MM-DD",
+          "maxLength": 20
+        },
+        "recipientOrMerchant": {
+          "type": "string",
+          "description": "Merchant name in SG or remittance recipient/channel in Myanmar (e.g. KBZPay, WaveMoney, Mother)",
+          "maxLength": 100
+        },
+        "note": {
+          "type": "string",
+          "description": "Additional memo or notes",
+          "maxLength": 300
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "type",
+        "category",
+        "title",
+        "amountSgd",
+        "exchangeRateUsed",
+        "amountMmk",
+        "date",
+        "recipientOrMerchant",
+        "note",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Holding": {
+      "title": "Holding",
+      "description": "Stock, ETF, or Bitcoin/Crypto investment position tracked in SGD and MMK.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "UID of the authenticated owner",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "assetType": {
+          "type": "string",
+          "description": "Asset classification",
+          "enum": ["stock", "crypto", "etf"],
+          "maxLength": 20
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Ticker symbol (e.g. BTC, D05.SI, NVDA, AAPL)",
+          "maxLength": 30
+        },
+        "name": {
+          "type": "string",
+          "description": "Full asset name",
+          "maxLength": 100
+        },
+        "quantity": {
+          "type": "number",
+          "description": "Number of shares or coins held"
+        },
+        "avgBuyPriceSgd": {
+          "type": "number",
+          "description": "Average purchase price per unit in SGD"
+        },
+        "currentPriceSgd": {
+          "type": "number",
+          "description": "Current market price per unit in SGD"
+        },
+        "platform": {
+          "type": "string",
+          "description": "Brokerage or exchange wallet (e.g. Moomoo SG, Tiger Brokers, Ledger, Coinbase SG)",
+          "maxLength": 80
+        },
+        "note": {
+          "type": "string",
+          "description": "Investment thesis or DCA notes",
+          "maxLength": 240
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp"
+        }
+      },
+      "required": [
+        "ownerId",
+        "assetType",
+        "symbol",
+        "name",
+        "quantity",
+        "avgBuyPriceSgd",
+        "currentPriceSgd",
+        "platform",
+        "note",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/vaultConfigs/{userId}": {
+      "schema": { "$ref": "#/entities/VaultConfig" },
+      "description": "Stores per-user exchange rate settings, budget baselines, and biometric lock metadata."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Stores user daily income, Singapore expenses, and Myanmar family remittances."
+    },
+    "/users/{userId}/holdings/{holdingId}": {
+      "schema": { "$ref": "#/entities/Holding" },
+      "description": "Stores user Stock, ETF, and Bitcoin/Crypto investment holdings."
+    }
+  }
+}

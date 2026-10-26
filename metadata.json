@@ -1,0 +1,6 @@
+{
+  "name": "Merlion Kyat Vault — SG & MM Personal Finance & Portfolio Tracker",
+  "description": "Personal expense, salary, remittance (SGD to MMK), stock & Bitcoin investment tracker for Myanmar professionals in Singapore with biometric WebAuthn lock.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

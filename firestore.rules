@@ -1,0 +1,337 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isParentVaultMember(userId) {
+      return get(/databases/$(database)/documents/vaultConfigs/$(userId)).data.ownerId == request.auth.uid;
+    }
+
+    // Blueprint Validation Helpers
+    function isValidVaultConfig(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'sgdToMmkRate',
+        'bankOfficialRate',
+        'monthlySalarySgd',
+        'monthlyRentSgd',
+        'monthlySavingsTargetSgd',
+        'biometricEnabled',
+        'passkeyId',
+        'pinCode',
+        'autoLockMinutes',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'sgdToMmkRate',
+        'bankOfficialRate',
+        'monthlySalarySgd',
+        'monthlyRentSgd',
+        'monthlySavingsTargetSgd',
+        'biometricEnabled',
+        'passkeyId',
+        'pinCode',
+        'autoLockMinutes',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.sgdToMmkRate is number && data.sgdToMmkRate > 0 && data.sgdToMmkRate <= 100000 &&
+      data.bankOfficialRate is number && data.bankOfficialRate > 0 && data.bankOfficialRate <= 100000 &&
+      data.monthlySalarySgd is number && data.monthlySalarySgd >= 0 && data.monthlySalarySgd <= 10000000 &&
+      data.monthlyRentSgd is number && data.monthlyRentSgd >= 0 && data.monthlyRentSgd <= 10000000 &&
+      data.monthlySavingsTargetSgd is number && data.monthlySavingsTargetSgd >= 0 && data.monthlySavingsTargetSgd <= 10000000 &&
+      data.biometricEnabled is bool &&
+      data.passkeyId is string && data.passkeyId.size() <= 256 &&
+      data.pinCode is string && data.pinCode.size() <= 64 &&
+      data.autoLockMinutes is number && data.autoLockMinutes >= 1 && data.autoLockMinutes <= 1440 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp &&
+      data.updatedAt == request.time;
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'type',
+        'category',
+        'title',
+        'amountSgd',
+        'exchangeRateUsed',
+        'amountMmk',
+        'date',
+        'recipientOrMerchant',
+        'note',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'type',
+        'category',
+        'title',
+        'amountSgd',
+        'exchangeRateUsed',
+        'amountMmk',
+        'date',
+        'recipientOrMerchant',
+        'note',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.type is string && data.type.size() <= 20 && data.type in ['income', 'expense', 'remittance', 'savings'] &&
+      data.category is string && data.category.size() >= 1 && data.category.size() <= 60 &&
+      data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
+      data.amountSgd is number && data.amountSgd >= 0 && data.amountSgd <= 100000000 &&
+      data.exchangeRateUsed is number && data.exchangeRateUsed > 0 && data.exchangeRateUsed <= 100000 &&
+      data.amountMmk is number && data.amountMmk >= 0 && data.amountMmk <= 1000000000000 &&
+      data.date is string && data.date.size() >= 8 && data.date.size() <= 20 &&
+      data.recipientOrMerchant is string && data.recipientOrMerchant.size() <= 100 &&
+      data.note is string && data.note.size() <= 300 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp &&
+      data.updatedAt == request.time;
+    }
+
+    function isValidHolding(data) {
+      return data.keys().hasAll([
+        'ownerId',
+        'assetType',
+        'symbol',
+        'name',
+        'quantity',
+        'avgBuyPriceSgd',
+        'currentPriceSgd',
+        'platform',
+        'note',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'ownerId',
+        'assetType',
+        'symbol',
+        'name',
+        'quantity',
+        'avgBuyPriceSgd',
+        'currentPriceSgd',
+        'platform',
+        'note',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 && data.ownerId.matches('^[a-zA-Z0-9_\\-]+$') &&
+      data.ownerId == request.auth.uid &&
+      data.assetType is string && data.assetType.size() <= 20 && data.assetType in ['stock', 'crypto', 'etf'] &&
+      data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 30 &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+      data.quantity is number && data.quantity > 0 && data.quantity <= 1000000000 &&
+      data.avgBuyPriceSgd is number && data.avgBuyPriceSgd >= 0 && data.avgBuyPriceSgd <= 100000000 &&
+      data.currentPriceSgd is number && data.currentPriceSgd >= 0 && data.currentPriceSgd <= 100000000 &&
+      data.platform is string && data.platform.size() >= 1 && data.platform.size() <= 80 &&
+      data.note is string && data.note.size() <= 240 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp &&
+      data.updatedAt == request.time;
+    }
+
+    // Collection 1: /vaultConfigs/{userId}
+    match /vaultConfigs/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId && (resource == null || existing().ownerId == request.auth.uid);
+      allow list: if isSignedIn() && request.auth.uid == userId && existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidVaultConfig(incoming()) &&
+        incoming().createdAt == request.time;
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidVaultConfig(incoming()) &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt && (
+          // Action 1: Update Exchange Rates & Budget Baselines
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'sgdToMmkRate',
+            'bankOfficialRate',
+            'monthlySalarySgd',
+            'monthlyRentSgd',
+            'monthlySavingsTargetSgd',
+            'updatedAt'
+          ])) ||
+          // Action 2: Update Security & Biometric Vault Settings
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'biometricEnabled',
+            'passkeyId',
+            'pinCode',
+            'autoLockMinutes',
+            'updatedAt'
+          ])) ||
+          // Action 3: Full Preferences Sync
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'sgdToMmkRate',
+            'bankOfficialRate',
+            'monthlySalarySgd',
+            'monthlyRentSgd',
+            'monthlySavingsTargetSgd',
+            'biometricEnabled',
+            'passkeyId',
+            'pinCode',
+            'autoLockMinutes',
+            'updatedAt'
+          ]))
+        )
+      );
+
+      allow delete: if isVerifiedUser() && isValidId(userId) && request.auth.uid == userId && existing().ownerId == request.auth.uid;
+    }
+
+    // Collection 2: /users/{userId}/transactions/{transactionId}
+    match /users/{userId}/transactions/{transactionId} {
+      allow get: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidId(transactionId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        isParentVaultMember(userId);
+
+      allow list: if isSignedIn() &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidId(transactionId) &&
+        request.auth.uid == userId &&
+        isValidTransaction(incoming()) &&
+        incoming().createdAt == request.time &&
+        isParentVaultMember(userId);
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidTransaction(incoming()) &&
+        isValidId(userId) &&
+        isValidId(transactionId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        isParentVaultMember(userId) && (
+          // Action: Edit Transaction Details
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'type',
+            'category',
+            'title',
+            'amountSgd',
+            'exchangeRateUsed',
+            'amountMmk',
+            'date',
+            'recipientOrMerchant',
+            'note',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidId(transactionId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        isParentVaultMember(userId);
+    }
+
+    // Collection 3: /users/{userId}/holdings/{holdingId}
+    match /users/{userId}/holdings/{holdingId} {
+      allow get: if isSignedIn() &&
+        isValidId(userId) &&
+        isValidId(holdingId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        isParentVaultMember(userId);
+
+      allow list: if isSignedIn() &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid;
+
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidId(holdingId) &&
+        request.auth.uid == userId &&
+        isValidHolding(incoming()) &&
+        incoming().createdAt == request.time &&
+        isParentVaultMember(userId);
+
+      allow update: if (
+        isVerifiedUser() &&
+        isValidHolding(incoming()) &&
+        isValidId(userId) &&
+        isValidId(holdingId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        incoming().ownerId == existing().ownerId &&
+        incoming().createdAt == existing().createdAt &&
+        isParentVaultMember(userId) && (
+          // Action 1: Market Price Update
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'currentPriceSgd',
+            'updatedAt'
+          ])) ||
+          // Action 2: Full Position Update (DCA / Rebalance)
+          (incoming().diff(existing()).affectedKeys().hasOnly([
+            'assetType',
+            'symbol',
+            'name',
+            'quantity',
+            'avgBuyPriceSgd',
+            'currentPriceSgd',
+            'platform',
+            'note',
+            'updatedAt'
+          ]))
+        )
+      );
+
+      allow delete: if isVerifiedUser() &&
+        isValidId(userId) &&
+        isValidId(holdingId) &&
+        request.auth.uid == userId &&
+        existing().ownerId == request.auth.uid &&
+        isParentVaultMember(userId);
+    }
+  }
+}
