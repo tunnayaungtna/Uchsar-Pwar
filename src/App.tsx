@@ -89,7 +89,7 @@ type NavSection = 'overview' | 'cashflow' | 'portfolio' | 'settings';
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('overview');
-  const [isVaultLocked, setIsVaultLocked] = useState<boolean>(false);
+  const [isVaultLocked, setIsVaultLocked] = useState<boolean>(true);
 
   // Day Mode / Night Mode
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -294,9 +294,34 @@ export default function App() {
     }
   }, [currentUser, vaultConfig, transactions, holdings]);
 
+  // Immediate Lock on App Exit / Background / Tab Switch / Screen Off
+  useEffect(() => {
+    const lockImmediately = () => {
+      setIsVaultLocked(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        lockImmediately();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', lockImmediately);
+    window.addEventListener('freeze', lockImmediately);
+    window.addEventListener('beforeunload', lockImmediately);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', lockImmediately);
+      window.removeEventListener('freeze', lockImmediately);
+      window.removeEventListener('beforeunload', lockImmediately);
+    };
+  }, []);
+
   // Idle Auto-Lock
   useEffect(() => {
-    if (!vaultConfig.biometricEnabled || isVaultLocked) return;
+    if (isVaultLocked) return;
     const timeoutMs = Math.max(1, vaultConfig.autoLockMinutes || 15) * 60 * 1000;
     let timer: ReturnType<typeof setTimeout>;
     const resetTimer = () => {
@@ -310,7 +335,7 @@ export default function App() {
       clearTimeout(timer);
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
     };
-  }, [vaultConfig.biometricEnabled, vaultConfig.autoLockMinutes, isVaultLocked]);
+  }, [vaultConfig.autoLockMinutes, isVaultLocked]);
 
   // Firebase Auth
   useEffect(() => {
@@ -1229,7 +1254,7 @@ export default function App() {
         await updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
           biometricEnabled: true,
           passkeyId: result.credentialId.slice(0, 256),
-          pinCode: (pinDraft.trim() || '2026').slice(0, 64),
+          pinCode: (vaultConfig.pinCode || '2026').slice(0, 64),
           autoLockMinutes: Math.max(1, Math.min(1440, Number(autoLockDraft) || 15)),
           updatedAt: serverTimestamp(),
         });
