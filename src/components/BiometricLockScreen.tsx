@@ -78,7 +78,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
         <div className="max-w-md w-full mx-auto my-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm mx-auto mb-3">
+              <div className="w-16 h-16 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-0.5 shadow-sm mx-auto mb-3 flex items-center justify-center">
                 <img
                   src="./assets/aistudio/my_walet_40feb1c8.png"
                   onError={(e) => {

@@ -1303,7 +1303,7 @@ export default function App() {
               }}
               className="flex items-center gap-2.5 text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0 min-w-0"
             >
-              <span className="w-9 h-9 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-xs">
+              <span className="w-9 h-9 aspect-square rounded-xl overflow-hidden bg-[#073b4c] p-0.5 shrink-0 inline-flex items-center justify-center shadow-xs">
                 <img
                   src="./assets/aistudio/my_walet_40feb1c8.png"
                   onError={(e) => {
@@ -2733,7 +2733,7 @@ export default function App() {
               <div className="bg-white dark:bg-slate-900 border border-emerald-200/90 dark:border-emerald-800/80 rounded-2xl p-5 sm:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <span className="w-14 h-14 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-sm">
+                    <span className="w-14 h-14 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-1 shrink-0 inline-flex items-center justify-center shadow-sm">
                       <img
                         src="./assets/aistudio/my_walet_40feb1c8.png"
                         onError={(e) => {
@@ -3010,7 +3010,7 @@ export default function App() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-12 h-12 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-xs">
+                  <span className="w-12 h-12 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-0.5 shrink-0 inline-flex items-center justify-center shadow-xs">
                     <img
                       src="./assets/aistudio/my_walet_40feb1c8.png"
                       onError={(e) => {

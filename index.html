@@ -9,14 +9,14 @@
     <meta property="og:description" content="Personal expense, salary, remittance (SGD to MMK), stock & Bitcoin investment tracker for Myanmar professionals in Singapore with biometric WebAuthn lock." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="theme-color" content="#059669" />
+    <meta name="theme-color" content="#073b4c" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ဥစ္စာပွား" />
-    <link rel="manifest" href="./manifest.json" />
-    <link id="app-favicon" rel="icon" type="image/png" href="./assets/aistudio/my_walet_40feb1c8.png" />
-    <link id="app-touch-icon" rel="apple-touch-icon" href="./assets/aistudio/my_walet_40feb1c8.png" />
+    <link id="app-manifest" rel="manifest" href="./manifest.json?v=4" />
+    <link id="app-favicon" rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=4" />
+    <link id="app-touch-icon" rel="apple-touch-icon" sizes="512x512" href="./icon-512.png?v=4" />
     <script>
       window.__deferredPwaPrompt = null;
       window.addEventListener('beforeinstallprompt', function (e) {
@@ -27,17 +27,49 @@
       (function () {
         var primaryIcon = './assets/aistudio/my_walet_40feb1c8.png';
         var fallbackIcon = './public/assets/aistudio/my_walet_40feb1c8.png';
+
+        function applySquareIconFromImage(img) {
+          try {
+            var size = 512;
+            var canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.fillStyle = '#073b4c';
+            ctx.fillRect(0, 0, size, size);
+            var scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+            var drawW = Math.round(img.naturalWidth * scale);
+            var drawH = Math.round(img.naturalHeight * scale);
+            var offsetX = Math.round((size - drawW) / 2);
+            var offsetY = Math.round((size - drawH) / 2);
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+            var squareDataUrl = canvas.toDataURL('image/png');
+            var fav = document.getElementById('app-favicon');
+            var touch = document.getElementById('app-touch-icon');
+            if (fav) fav.href = squareDataUrl;
+            if (touch) touch.href = squareDataUrl;
+          } catch (err) {
+            // ignore canvas errors
+          }
+        }
+
         var testImg = new Image();
+        testImg.crossOrigin = 'anonymous';
+        testImg.onload = function () {
+          applySquareIconFromImage(testImg);
+        };
         testImg.onerror = function () {
-          var fav = document.getElementById('app-favicon');
-          var touch = document.getElementById('app-touch-icon');
-          if (fav) fav.href = fallbackIcon;
-          if (touch) touch.href = fallbackIcon;
+          if (!testImg.dataset.fallback) {
+            testImg.dataset.fallback = '1';
+            testImg.src = fallbackIcon;
+          }
         };
         testImg.src = primaryIcon;
+
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(function () {});
+            navigator.serviceWorker.register('./sw.js?v=4', { scope: './' }).catch(function () {});
           });
         }
       })();
