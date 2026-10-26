@@ -294,30 +294,114 @@ export default function App() {
     }
   }, [currentUser, vaultConfig, transactions, holdings]);
 
-  // Immediate Lock on App Exit / Background / Tab Switch / Screen Off
+  useEffect(() => {
+    try {
+      localStorage.setItem('uchsar_vault_is_locked', isVaultLocked ? 'true' : 'false');
+    } catch {
+      // ignore
+    }
+  }, [isVaultLocked]);
+
+  const handleUnlockVault = useCallback(() => {
+    try {
+      localStorage.setItem('uchsar_vault_is_locked', 'false');
+      if (!window.history.state || !window.history.state.uchsarGuard) {
+        window.history.pushState({ uchsarGuard: 'unlocked', ts: Date.now() }, '');
+      }
+    } catch {
+      // ignore history/storage errors
+    }
+    setIsVaultLocked(false);
+  }, []);
+
+  // Immediate Lock on Back Key Exit, Re-Entry (bfcache/pageshow), App Switch, or Screen Off
   useEffect(() => {
     const lockImmediately = () => {
+      try {
+        localStorage.setItem('uchsar_vault_is_locked', 'true');
+      } catch {
+        // ignore
+      }
+      setModalOpen(false);
+      setShowInstallGuideModal(false);
       setIsVaultLocked(true);
     };
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         lockImmediately();
+      } else if (document.visibilityState === 'visible') {
+        try {
+          if (localStorage.getItem('uchsar_vault_is_locked') !== 'false') {
+            setIsVaultLocked(true);
+          }
+        } catch {
+          setIsVaultLocked(true);
+        }
+      }
+    };
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      // If restored from back-forward cache (e.g. after Back key exit) or marked locked, lock immediately
+      if (event.persisted) {
+        lockImmediately();
+        return;
+      }
+      try {
+        if (localStorage.getItem('uchsar_vault_is_locked') !== 'false') {
+          setIsVaultLocked(true);
+        }
+      } catch {
+        setIsVaultLocked(true);
+      }
+    };
+
+    const handlePopState = () => {
+      // When user presses the hardware/browser Back button
+      if (modalOpen || showInstallGuideModal) {
+        setModalOpen(false);
+        setShowInstallGuideModal(false);
+        try {
+          window.history.pushState({ uchsarGuard: 'unlocked', ts: Date.now() }, '');
+        } catch {
+          // ignore
+        }
+        return;
+      }
+      // Lock immediately when backing out of the app
+      lockImmediately();
+    };
+
+    const handleWindowFocus = () => {
+      try {
+        if (localStorage.getItem('uchsar_vault_is_locked') !== 'false') {
+          setIsVaultLocked(true);
+        }
+      } catch {
+        // ignore
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('pagehide', lockImmediately);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('popstate', handlePopState);
     window.addEventListener('freeze', lockImmediately);
+    window.addEventListener('resume', handleWindowFocus);
+    window.addEventListener('focus', handleWindowFocus);
     window.addEventListener('beforeunload', lockImmediately);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', lockImmediately);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('freeze', lockImmediately);
+      window.removeEventListener('resume', handleWindowFocus);
+      window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('beforeunload', lockImmediately);
     };
-  }, []);
+  }, [modalOpen, showInstallGuideModal]);
 
   // Idle Auto-Lock
   useEffect(() => {
@@ -1335,7 +1419,7 @@ export default function App() {
         userEmail={currentUser?.email}
         isDark={isDark}
         onToggleTheme={() => setIsDark((d) => !d)}
-        onUnlock={() => setIsVaultLocked(false)}
+        onUnlock={handleUnlockVault}
       />
     );
   }
