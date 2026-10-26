@@ -1,4 +1,5 @@
-import { VaultConfig, TransactionRecord, HoldingRecord } from '../types';
+import { type VaultConfig, type TransactionRecord, type HoldingRecord } from '../types';
+
 
 export const DEFAULT_VAULT_CONFIG: VaultConfig = {
   ownerId: 'local_user',

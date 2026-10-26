@@ -8,7 +8,7 @@ import {
   onAuthStateChanged,
   signInWithPopup,
   signOut,
-  User,
+  type User,
 } from 'firebase/auth';
 import {
   collection,
@@ -62,10 +62,10 @@ import {
   OperationType,
 } from './firebase';
 import {
-  VaultConfig,
-  TransactionRecord,
-  TransactionType,
-  HoldingRecord,
+  type VaultConfig,
+  type TransactionRecord,
+  type TransactionType,
+  type HoldingRecord,
   TRANSACTION_CATEGORIES,
   formatSgd,
   formatMmk,

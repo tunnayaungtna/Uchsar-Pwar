@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -16,9 +16,6 @@ concurrency:
 
 jobs:
   build-and-deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -29,20 +26,41 @@ jobs:
         with:
           node-version: 20
 
+      - name: Normalize package.json versions for public npm registry
+        run: |
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            pkg.dependencies = {
+              "firebase": "^11.4.0",
+              "lucide-react": "^0.477.0",
+              "react": "^18.3.1",
+              "react-dom": "^18.3.1",
+              "recharts": "^2.15.1"
+            };
+            pkg.devDependencies = {
+              "@tailwindcss/vite": "^4.0.9",
+              "@types/react": "^18.3.18",
+              "@types/react-dom": "^18.3.5",
+              "@vitejs/plugin-react": "^4.3.4",
+              "tailwindcss": "^4.0.9",
+              "typescript": "^5.7.3",
+              "vite": "^6.2.0"
+            };
+            pkg.scripts.build = "vite build";
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+          '
+          rm -f bun.lock package-lock.json
+
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build production bundle
         run: npm run build
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: './dist'
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true

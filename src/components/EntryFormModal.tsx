@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import {
-  TransactionRecord,
-  TransactionType,
-  HoldingRecord,
-  AssetType,
+  type TransactionRecord,
+  type TransactionType,
+  type HoldingRecord,
+  type AssetType,
   TRANSACTION_CATEGORIES,
   SG_PLATFORMS,
   formatMyanmarLakhs,
