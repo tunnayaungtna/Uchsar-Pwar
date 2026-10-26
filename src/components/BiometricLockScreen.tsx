@@ -78,20 +78,20 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
         <div className="max-w-md w-full mx-auto my-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-amber-400/60 shadow-sm mx-auto mb-3 bg-slate-900">
+              <div className="w-16 h-16 rounded-full overflow-hidden shadow-sm mx-auto mb-3">
                 <img
-                  src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                  src="./assets/aistudio/my_walet_40feb1c8.png"
                   onError={(e) => {
                     const img = e.currentTarget;
                     if (!img.dataset.fallback) {
                       img.dataset.fallback = '1';
                       img.src =
-                        './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                        './public/assets/aistudio/my_walet_40feb1c8.png';
                     }
                   }}
                   alt="ဥစ္စာပွား (Uchsar Pwar)"
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover object-center scale-[1.16]"
+                  className="w-full h-full object-contain object-center"
                 />
               </div>
               <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">

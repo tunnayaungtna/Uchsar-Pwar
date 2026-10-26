@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uchsar-pwar-pwa-v2';
+const CACHE_NAME = 'uchsar-pwar-pwa-v3';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -22,12 +22,12 @@ self.addEventListener('fetch', (event) => {
         if (
           response &&
           response.status === 404 &&
-          event.request.url.includes('/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg') &&
+          event.request.url.includes('/assets/aistudio/my_walet_40feb1c8.png') &&
           !event.request.url.includes('/public/assets/aistudio/')
         ) {
           const fallbackUrl = event.request.url.replace(
-            '/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg',
-            '/public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg'
+            '/assets/aistudio/my_walet_40feb1c8.png',
+            '/public/assets/aistudio/my_walet_40feb1c8.png'
           );
           return fetch(fallbackUrl);
         }

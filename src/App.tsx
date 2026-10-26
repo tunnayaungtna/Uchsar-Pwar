@@ -1303,20 +1303,20 @@ export default function App() {
               }}
               className="flex items-center gap-2.5 text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0 min-w-0"
             >
-              <span className="w-9 h-9 rounded-full overflow-hidden border border-amber-400/60 bg-slate-900 shrink-0 inline-flex items-center justify-center shadow-xs">
+              <span className="w-9 h-9 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-xs">
                 <img
-                  src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                  src="./assets/aistudio/my_walet_40feb1c8.png"
                   onError={(e) => {
                     const img = e.currentTarget;
                     if (!img.dataset.fallback) {
                       img.dataset.fallback = '1';
                       img.src =
-                        './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                        './public/assets/aistudio/my_walet_40feb1c8.png';
                     }
                   }}
                   alt="ဥစ္စာပွား (Uchsar Pwar)"
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover object-center scale-[1.16]"
+                  className="w-full h-full object-contain object-center"
                 />
               </span>
               <span className="truncate">ဥစ္စာပွား</span>
@@ -2733,20 +2733,20 @@ export default function App() {
               <div className="bg-white dark:bg-slate-900 border border-emerald-200/90 dark:border-emerald-800/80 rounded-2xl p-5 sm:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <span className="w-14 h-14 rounded-2xl overflow-hidden border-2 border-amber-400/70 bg-slate-900 shrink-0 inline-flex items-center justify-center shadow-sm">
+                    <span className="w-14 h-14 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-sm">
                       <img
-                        src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                        src="./assets/aistudio/my_walet_40feb1c8.png"
                         onError={(e) => {
                           const img = e.currentTarget;
                           if (!img.dataset.fallback) {
                             img.dataset.fallback = '1';
                             img.src =
-                              './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                              './public/assets/aistudio/my_walet_40feb1c8.png';
                           }
                         }}
                         alt="ဥစ္စာပွား App Icon"
                         referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover object-center scale-[1.16]"
+                        className="w-full h-full object-contain object-center"
                       />
                     </span>
                     <div className="min-w-0">
@@ -3010,20 +3010,20 @@ export default function App() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-amber-400/80 bg-slate-900 shrink-0 inline-flex items-center justify-center shadow-xs">
+                  <span className="w-12 h-12 rounded-full overflow-hidden shrink-0 inline-flex items-center justify-center shadow-xs">
                     <img
-                      src="./assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg"
+                      src="./assets/aistudio/my_walet_40feb1c8.png"
                       onError={(e) => {
                         const img = e.currentTarget;
                         if (!img.dataset.fallback) {
                           img.dataset.fallback = '1';
                           img.src =
-                            './public/assets/aistudio/Gemini_Generated_Image_i9br20i9br20i9br_bb316cd4.jpg';
+                            './public/assets/aistudio/my_walet_40feb1c8.png';
                         }
                       }}
                       alt="ဥစ္စာပွား"
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover object-center scale-[1.16]"
+                      className="w-full h-full object-contain object-center"
                     />
                   </span>
                   <div className="min-w-0">
