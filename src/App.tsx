@@ -170,6 +170,23 @@ export default function App() {
   const [isRestoringBackup, setIsRestoringBackup] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Offline / Online Status & Local Optimistic Sync Tracking
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const deletedIdsRef = useRef<Set<string>>(
+    (() => {
+      try {
+        const raw = localStorage.getItem('merlion_deleted_ids_v1');
+        return raw ? new Set<string>(JSON.parse(raw)) : new Set<string>();
+      } catch {
+        return new Set<string>();
+      }
+    })()
+  );
+  const localUpdatedTxRef = useRef<Map<string, TransactionRecord>>(new Map());
+  const localUpdatedHoldRef = useRef<Map<string, HoldingRecord>>(new Map());
+
   // Security Drafts
   const [currentPinDraft, setCurrentPinDraft] = useState<string>('');
   const [pinDraft, setPinDraft] = useState<string>('');
@@ -283,16 +300,26 @@ export default function App() {
   }, [vaultConfig.sgdToMmkRate, vaultConfig.pinCode, vaultConfig.autoLockMinutes]);
 
   useEffect(() => {
-    if (!currentUser) {
-      try {
-        localStorage.setItem('merlion_vault_config_v1', JSON.stringify(vaultConfig));
-        localStorage.setItem('merlion_transactions_v1', JSON.stringify(transactions));
-        localStorage.setItem('merlion_holdings_v1', JSON.stringify(holdings));
-      } catch {
-        // ignore
-      }
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Always persist all data locally on device so the app works 100% offline with zero latency
+  useEffect(() => {
+    try {
+      localStorage.setItem('merlion_vault_config_v1', JSON.stringify(vaultConfig));
+      localStorage.setItem('merlion_transactions_v1', JSON.stringify(transactions));
+      localStorage.setItem('merlion_holdings_v1', JSON.stringify(holdings));
+    } catch {
+      // ignore storage errors
     }
-  }, [currentUser, vaultConfig, transactions, holdings]);
+  }, [vaultConfig, transactions, holdings]);
 
   useEffect(() => {
     try {
@@ -496,62 +523,126 @@ export default function App() {
     const configPath = `vaultConfigs/${currentUser.uid}`;
     const configRef = doc(db, 'vaultConfigs', currentUser.uid);
 
-    let subUnsubTx: (() => void) | null = null;
-    let subUnsubHoldings: (() => void) | null = null;
+    const txPath = `users/${currentUser.uid}/transactions`;
+    const txQuery = query(
+      collection(db, 'users', currentUser.uid, 'transactions'),
+      orderBy('date', 'desc')
+    );
+
+    const holdPath = `users/${currentUser.uid}/holdings`;
+    const holdQuery = query(collection(db, 'users', currentUser.uid, 'holdings'));
 
     const unsubConfig = onSnapshot(
       configRef,
-      async (snapshot) => {
+      (snapshot) => {
         if (!snapshot.exists()) {
-          await bootstrapCloudVault(currentUser);
+          if (typeof navigator === 'undefined' || navigator.onLine) {
+            bootstrapCloudVault(currentUser).catch(() => {});
+          }
           return;
         }
-        setVaultConfig(snapshot.data() as VaultConfig);
+        setVaultConfig((prev) => ({
+          ...prev,
+          ...(snapshot.data() as VaultConfig),
+        }));
+      },
+      (err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.GET, configPath);
+        } catch {
+          // ignore offline/background sync errors
+        }
+      }
+    );
 
-        if (!subUnsubTx) {
-          const txPath = `users/${currentUser.uid}/transactions`;
-          const txQuery = query(
-            collection(db, 'users', currentUser.uid, 'transactions'),
-            orderBy('date', 'desc')
-          );
-          subUnsubTx = onSnapshot(
-            txQuery,
-            (txSnap) => {
-              setTransactions(
-                txSnap.docs.map((d) => ({
+    const unsubTx = onSnapshot(
+      txQuery,
+      (txSnap) => {
+        if (txSnap.empty) return;
+        setTransactions((prev) => {
+          const mergedMap = new Map<string, TransactionRecord>();
+          txSnap.docs.forEach((d) => {
+            if (!deletedIdsRef.current.has(d.id)) {
+              const localOverride = localUpdatedTxRef.current.get(d.id);
+              mergedMap.set(
+                d.id,
+                localOverride || {
                   id: d.id,
                   ...(d.data() as Omit<TransactionRecord, 'id'>),
-                }))
+                }
               );
-            },
-            (err) => handleFirestoreError(err, OperationType.LIST, txPath)
-          );
+            }
+          });
+          // Keep any locally added transactions not yet in cloud snapshot
+          prev.forEach((localTx) => {
+            if (!deletedIdsRef.current.has(localTx.id) && !mergedMap.has(localTx.id)) {
+              mergedMap.set(localTx.id, localTx);
+            }
+          });
+          localUpdatedTxRef.current.forEach((tx, id) => {
+            if (!deletedIdsRef.current.has(id)) {
+              mergedMap.set(id, tx);
+            }
+          });
+          return Array.from(mergedMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+        });
+      },
+      (err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.LIST, txPath);
+        } catch {
+          // ignore offline/background sync errors
         }
+      }
+    );
 
-        if (!subUnsubHoldings) {
-          const holdPath = `users/${currentUser.uid}/holdings`;
-          const holdQuery = query(collection(db, 'users', currentUser.uid, 'holdings'));
-          subUnsubHoldings = onSnapshot(
-            holdQuery,
-            (holdSnap) => {
-              setHoldings(
-                holdSnap.docs.map((d) => ({
+    const unsubHoldings = onSnapshot(
+      holdQuery,
+      (holdSnap) => {
+        if (holdSnap.empty) return;
+        setHoldings((prev) => {
+          const mergedMap = new Map<string, HoldingRecord>();
+          holdSnap.docs.forEach((d) => {
+            if (!deletedIdsRef.current.has(d.id)) {
+              const localOverride = localUpdatedHoldRef.current.get(d.id);
+              mergedMap.set(
+                d.id,
+                localOverride || {
                   id: d.id,
                   ...(d.data() as Omit<HoldingRecord, 'id'>),
-                }))
+                }
               );
-            },
-            (err) => handleFirestoreError(err, OperationType.LIST, holdPath)
-          );
-        }
+            }
+          });
+          prev.forEach((localHold) => {
+            if (!deletedIdsRef.current.has(localHold.id) && !mergedMap.has(localHold.id)) {
+              mergedMap.set(localHold.id, localHold);
+            }
+          });
+          localUpdatedHoldRef.current.forEach((hold, id) => {
+            if (!deletedIdsRef.current.has(id)) {
+              mergedMap.set(id, hold);
+            }
+          });
+          return Array.from(mergedMap.values());
+        });
       },
-      (err) => handleFirestoreError(err, OperationType.GET, configPath)
+      (err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.LIST, holdPath);
+        } catch {
+          // ignore offline/background sync errors
+        }
+      }
     );
 
     return () => {
       unsubConfig();
-      if (subUnsubTx) subUnsubTx();
-      if (subUnsubHoldings) subUnsubHoldings();
+      unsubTx();
+      unsubHoldings();
     };
   }, [isAuthReady, currentUser, bootstrapCloudVault]);
 
@@ -811,19 +902,48 @@ export default function App() {
     };
   }, [transactions, expensePeriod, includeRemittanceInChart]);
 
-  // CRUD Handlers
+  // CRUD Handlers — Instant 0ms Optimistic State & LocalStorage Updates + Background Cloud Sync
   const handleSaveTransaction = async (
     txPayload: Omit<TransactionRecord, 'id' | 'ownerId'>
   ) => {
+    const isEdit = Boolean(editingTx);
+    const txId = editingTx
+      ? editingTx.id
+      : `tx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const ownerId = currentUser ? currentUser.uid : 'local_user';
+
+    const nextRecord: TransactionRecord = {
+      id: txId,
+      ownerId,
+      ...txPayload,
+    };
+
+    deletedIdsRef.current.delete(txId);
+    localUpdatedTxRef.current.set(txId, nextRecord);
+
+    // 1. Update local state & localStorage IMMEDIATELY (0ms latency, instant recalculation)
+    setTransactions((prev) => {
+      const updated = isEdit
+        ? prev.map((item) => (item.id === txId ? nextRecord : item))
+        : [nextRecord, ...prev];
+      const sorted = [...updated].sort((a, b) => b.date.localeCompare(a.date));
+      try {
+        localStorage.setItem('merlion_transactions_v1', JSON.stringify(sorted));
+      } catch {
+        // ignore
+      }
+      return sorted;
+    });
+
+    setEditingTx(null);
+    showToast(isEdit ? 'စာရင်းပြင်ဆင်ပြီးပါပြီ' : 'စာရင်းသိမ်းပြီးပါပြီ');
+
+    // 2. Sync to Firestore asynchronously in background if signed in
     if (currentUser) {
-      const txId = editingTx
-        ? editingTx.id
-        : `tx_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const path = `users/${currentUser.uid}/transactions/${txId}`;
       const txRef = doc(db, 'users', currentUser.uid, 'transactions', txId);
-      try {
-        if (editingTx) {
-          await updateDoc(txRef, {
+      const writePromise = isEdit
+        ? updateDoc(txRef, {
             type: txPayload.type,
             category: txPayload.category,
             title: txPayload.title,
@@ -834,65 +954,103 @@ export default function App() {
             recipientOrMerchant: txPayload.recipientOrMerchant,
             note: txPayload.note,
             updatedAt: serverTimestamp(),
-          });
-        } else {
-          await setDoc(txRef, {
+          })
+        : setDoc(txRef, {
             ownerId: currentUser.uid,
             ...txPayload,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           });
+
+      writePromise.catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, isEdit ? OperationType.UPDATE : OperationType.CREATE, path);
+        } catch {
+          // ignore background sync error when offline
         }
-      } catch (err) {
-        handleFirestoreError(
-          err,
-          editingTx ? OperationType.UPDATE : OperationType.CREATE,
-          path
-        );
-      }
-    } else {
-      if (editingTx) {
-        setTransactions((prev) =>
-          prev.map((item) => (item.id === editingTx.id ? { ...item, ...txPayload } : item))
-        );
-      } else {
-        setTransactions((prev) => [
-          { id: `tx_${Date.now()}`, ownerId: 'local_user', ...txPayload },
-          ...prev,
-        ]);
-      }
+      });
     }
-    const wasEditing = Boolean(editingTx);
-    setEditingTx(null);
-    showToast(wasEditing ? 'စာရင်းပြင်ဆင်ပြီးပါပြီ' : 'စာရင်းသိမ်းပြီးပါပြီ');
   };
 
   const handleDeleteTransaction = async (id: string) => {
+    deletedIdsRef.current.add(id);
+    localUpdatedTxRef.current.delete(id);
+    try {
+      localStorage.setItem(
+        'merlion_deleted_ids_v1',
+        JSON.stringify(Array.from(deletedIdsRef.current))
+      );
+    } catch {
+      // ignore
+    }
+
+    // 1. Remove from local state & localStorage IMMEDIATELY
+    setTransactions((prev) => {
+      const filtered = prev.filter((t) => t.id !== id);
+      try {
+        localStorage.setItem('merlion_transactions_v1', JSON.stringify(filtered));
+      } catch {
+        // ignore
+      }
+      return filtered;
+    });
+    showToast('ဖျက်ပြီးပါပြီ');
+
+    // 2. Delete from Firestore in background if signed in
     if (currentUser) {
       const path = `users/${currentUser.uid}/transactions/${id}`;
-      try {
-        await deleteDoc(doc(db, 'users', currentUser.uid, 'transactions', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, path);
-      }
-    } else {
-      setTransactions((prev) => prev.filter((t) => t.id !== id));
+      deleteDoc(doc(db, 'users', currentUser.uid, 'transactions', id)).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.DELETE, path);
+        } catch {
+          // ignore background sync error
+        }
+      });
     }
-    showToast('ဖျက်ပြီးပါပြီ');
   };
 
   const handleSaveHolding = async (
     holdingPayload: Omit<HoldingRecord, 'id' | 'ownerId'>
   ) => {
+    const isEdit = Boolean(editingHolding);
+    const holdId = editingHolding
+      ? editingHolding.id
+      : `hold_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    const ownerId = currentUser ? currentUser.uid : 'local_user';
+
+    const nextHolding: HoldingRecord = {
+      id: holdId,
+      ownerId,
+      ...holdingPayload,
+    };
+
+    deletedIdsRef.current.delete(holdId);
+    localUpdatedHoldRef.current.set(holdId, nextHolding);
+
+    // 1. Update local state & localStorage IMMEDIATELY (0ms latency, instant portfolio calculation)
+    setHoldings((prev) => {
+      const updated = isEdit
+        ? prev.map((h) => (h.id === holdId ? nextHolding : h))
+        : [nextHolding, ...prev];
+      try {
+        localStorage.setItem('merlion_holdings_v1', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+
+    setEditingHolding(null);
+    showToast(isEdit ? 'စာရင်းပြင်ဆင်ပြီးပါပြီ' : 'သိမ်းပြီးပါပြီ');
+
+    // 2. Sync to Firestore asynchronously in background if signed in
     if (currentUser) {
-      const holdId = editingHolding
-        ? editingHolding.id
-        : `hold_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       const path = `users/${currentUser.uid}/holdings/${holdId}`;
       const holdRef = doc(db, 'users', currentUser.uid, 'holdings', holdId);
-      try {
-        if (editingHolding) {
-          await updateDoc(holdRef, {
+      const writePromise = isEdit
+        ? updateDoc(holdRef, {
             assetType: holdingPayload.assetType,
             symbol: holdingPayload.symbol,
             name: holdingPayload.name,
@@ -902,78 +1060,108 @@ export default function App() {
             platform: holdingPayload.platform,
             note: holdingPayload.note,
             updatedAt: serverTimestamp(),
-          });
-        } else {
-          await setDoc(holdRef, {
+          })
+        : setDoc(holdRef, {
             ownerId: currentUser.uid,
             ...holdingPayload,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
           });
+
+      writePromise.catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, isEdit ? OperationType.UPDATE : OperationType.CREATE, path);
+        } catch {
+          // ignore background sync error
         }
-      } catch (err) {
-        handleFirestoreError(
-          err,
-          editingHolding ? OperationType.UPDATE : OperationType.CREATE,
-          path
-        );
-      }
-    } else {
-      if (editingHolding) {
-        setHoldings((prev) =>
-          prev.map((h) => (h.id === editingHolding.id ? { ...h, ...holdingPayload } : h))
-        );
-      } else {
-        setHoldings((prev) => [
-          { id: `hold_${Date.now()}`, ownerId: 'local_user', ...holdingPayload },
-          ...prev,
-        ]);
-      }
+      });
     }
-    const wasEditing = Boolean(editingHolding);
-    setEditingHolding(null);
-    showToast(wasEditing ? 'စာရင်းပြင်ဆင်ပြီးပါပြီ' : 'သိမ်းပြီးပါပြီ');
   };
 
   const handleDeleteHolding = async (id: string) => {
+    deletedIdsRef.current.add(id);
+    localUpdatedHoldRef.current.delete(id);
+    try {
+      localStorage.setItem(
+        'merlion_deleted_ids_v1',
+        JSON.stringify(Array.from(deletedIdsRef.current))
+      );
+    } catch {
+      // ignore
+    }
+
+    // 1. Remove from local state & localStorage IMMEDIATELY
+    setHoldings((prev) => {
+      const filtered = prev.filter((h) => h.id !== id);
+      try {
+        localStorage.setItem('merlion_holdings_v1', JSON.stringify(filtered));
+      } catch {
+        // ignore
+      }
+      return filtered;
+    });
+    showToast('ဖျက်ပြီးပါပြီ');
+
+    // 2. Delete from Firestore in background if signed in
     if (currentUser) {
       const path = `users/${currentUser.uid}/holdings/${id}`;
-      try {
-        await deleteDoc(doc(db, 'users', currentUser.uid, 'holdings', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, path);
-      }
-    } else {
-      setHoldings((prev) => prev.filter((h) => h.id !== id));
+      deleteDoc(doc(db, 'users', currentUser.uid, 'holdings', id)).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.DELETE, path);
+        } catch {
+          // ignore background sync error
+        }
+      });
     }
-    showToast('ဖျက်ပြီးပါပြီ');
   };
 
   const handleSaveExchangeRate = async (e: React.FormEvent) => {
     e.preventDefault();
     const nextRate = Math.max(100, Math.min(100000, Number(rateDraft) || 3380));
-    if (currentUser) {
-      const path = `vaultConfigs/${currentUser.uid}`;
+
+    // 1. Update local state & calculator IMMEDIATELY
+    setVaultConfig((prev) => {
+      const updated = { ...prev, sgdToMmkRate: nextRate };
       try {
-        await updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
-          sgdToMmkRate: nextRate,
-          bankOfficialRate: vaultConfig.bankOfficialRate,
-          monthlySalarySgd: vaultConfig.monthlySalarySgd,
-          monthlyRentSgd: vaultConfig.monthlyRentSgd,
-          monthlySavingsTargetSgd: vaultConfig.monthlySavingsTargetSgd,
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, path);
+        localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
+      } catch {
+        // ignore
       }
-    } else {
-      setVaultConfig((prev) => ({ ...prev, sgdToMmkRate: nextRate }));
-    }
+      return updated;
+    });
+    const currentSgdNum = parseFloat(calcSgd) || 0;
+    setCalcLakhs(((currentSgdNum * nextRate) / 100000).toFixed(2));
     setIsEditingRate(false);
     showToast(`1 SGD = ${nextRate.toLocaleString()} MMK သိမ်းပြီးပါပြီ`);
+
+    // 2. Sync to Firestore in background if signed in
+    if (currentUser) {
+      const path = `vaultConfigs/${currentUser.uid}`;
+      updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
+        sgdToMmkRate: nextRate,
+        bankOfficialRate: vaultConfig.bankOfficialRate,
+        monthlySalarySgd: vaultConfig.monthlySalarySgd,
+        monthlyRentSgd: vaultConfig.monthlyRentSgd,
+        monthlySavingsTargetSgd: vaultConfig.monthlySavingsTargetSgd,
+        updatedAt: serverTimestamp(),
+      }).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, path);
+        } catch {
+          // ignore background sync error
+        }
+      });
+    }
   };
 
   const handleRefreshLiveBtc = async () => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      showToast('အင်တာနက်မရှိသော်လည်း သိမ်းထားသော ပေါက်ဈေးဖြင့် တွက်ချက်ထားပါသည်');
+      return;
+    }
     setIsRefreshingMarket(true);
     try {
       const res = await fetch(
@@ -985,25 +1173,39 @@ export default function App() {
         if (rawBtc > 0) {
           const clampedPrice = Math.min(100000000, rawBtc);
           let updatedAny = false;
-          for (const h of holdings) {
-            if (h.symbol.toUpperCase() === 'BTC') {
-              updatedAny = true;
-              if (currentUser) {
+          setHoldings((prev) => {
+            const nextList = prev.map((item) => {
+              if (item.symbol.toUpperCase() === 'BTC') {
+                updatedAny = true;
+                const updatedItem = { ...item, currentPriceSgd: clampedPrice };
+                localUpdatedHoldRef.current.set(item.id, updatedItem);
+                return updatedItem;
+              }
+              return item;
+            });
+            try {
+              localStorage.setItem('merlion_holdings_v1', JSON.stringify(nextList));
+            } catch {
+              // ignore
+            }
+            return nextList;
+          });
+
+          if (currentUser) {
+            for (const h of holdings) {
+              if (h.symbol.toUpperCase() === 'BTC') {
                 const path = `users/${currentUser.uid}/holdings/${h.id}`;
-                try {
-                  await updateDoc(doc(db, 'users', currentUser.uid, 'holdings', h.id), {
-                    currentPriceSgd: clampedPrice,
-                    updatedAt: serverTimestamp(),
-                  });
-                } catch (err) {
-                  handleFirestoreError(err, OperationType.UPDATE, path);
-                }
-              } else {
-                setHoldings((prev) =>
-                  prev.map((item) =>
-                    item.id === h.id ? { ...item, currentPriceSgd: clampedPrice } : item
-                  )
-                );
+                updateDoc(doc(db, 'users', currentUser.uid, 'holdings', h.id), {
+                  currentPriceSgd: clampedPrice,
+                  updatedAt: serverTimestamp(),
+                }).catch((err) => {
+                  if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+                  try {
+                    handleFirestoreError(err, OperationType.UPDATE, path);
+                  } catch {
+                    // ignore
+                  }
+                });
               }
             }
           }
@@ -1225,98 +1427,140 @@ export default function App() {
         Math.min(10000000, Number(parsed.vaultConfig?.monthlySavingsTargetSgd) || 1800)
       );
 
-      if (currentUser) {
-        const configRef = doc(db, 'vaultConfigs', currentUser.uid);
-        await updateDoc(configRef, {
-          sgdToMmkRate: nextRate,
-          bankOfficialRate: nextBankRate,
-          monthlySalarySgd: nextSalary,
-          monthlyRentSgd: nextRent,
-          monthlySavingsTargetSgd: nextSavingsTarget,
-          updatedAt: serverTimestamp(),
-        });
-
-        const existingTxIds = new Set(transactions.map((t) => t.id));
-        for (const tx of restoredTransactions) {
-          const txRef = doc(db, 'users', currentUser.uid, 'transactions', tx.id);
-          if (existingTxIds.has(tx.id)) {
-            await updateDoc(txRef, {
-              type: tx.type,
-              category: tx.category,
-              title: tx.title,
-              amountSgd: tx.amountSgd,
-              exchangeRateUsed: tx.exchangeRateUsed,
-              amountMmk: tx.amountMmk,
-              date: tx.date,
-              recipientOrMerchant: tx.recipientOrMerchant,
-              note: tx.note,
-              updatedAt: serverTimestamp(),
-            });
-          } else {
-            await setDoc(txRef, {
-              ownerId: currentUser.uid,
-              type: tx.type,
-              category: tx.category,
-              title: tx.title,
-              amountSgd: tx.amountSgd,
-              exchangeRateUsed: tx.exchangeRateUsed,
-              amountMmk: tx.amountMmk,
-              date: tx.date,
-              recipientOrMerchant: tx.recipientOrMerchant,
-              note: tx.note,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-        }
-
-        const existingHoldIds = new Set(holdings.map((h) => h.id));
-        for (const h of restoredHoldings) {
-          const holdRef = doc(db, 'users', currentUser.uid, 'holdings', h.id);
-          if (existingHoldIds.has(h.id)) {
-            await updateDoc(holdRef, {
-              assetType: h.assetType,
-              symbol: h.symbol,
-              name: h.name,
-              quantity: h.quantity,
-              avgBuyPriceSgd: h.avgBuyPriceSgd,
-              currentPriceSgd: h.currentPriceSgd,
-              platform: h.platform,
-              note: h.note,
-              updatedAt: serverTimestamp(),
-            });
-          } else {
-            await setDoc(holdRef, {
-              ownerId: currentUser.uid,
-              assetType: h.assetType,
-              symbol: h.symbol,
-              name: h.name,
-              quantity: h.quantity,
-              avgBuyPriceSgd: h.avgBuyPriceSgd,
-              currentPriceSgd: h.currentPriceSgd,
-              platform: h.platform,
-              note: h.note,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-            });
-          }
-        }
-      } else {
-        setVaultConfig((prev) => ({
+      // 1. Update local state & localStorage IMMEDIATELY (0ms latency)
+      setVaultConfig((prev) => {
+        const updated = {
           ...prev,
           sgdToMmkRate: nextRate,
           bankOfficialRate: nextBankRate,
           monthlySalarySgd: nextSalary,
           monthlyRentSgd: nextRent,
           monthlySavingsTargetSgd: nextSavingsTarget,
-        }));
-        if (restoredTransactions.length > 0) setTransactions(restoredTransactions);
-        if (restoredHoldings.length > 0) setHoldings(restoredHoldings);
+        };
+        try {
+          localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
+        } catch {
+          // ignore
+        }
+        return updated;
+      });
+
+      if (restoredTransactions.length > 0) {
+        restoredTransactions.forEach((tx) => {
+          deletedIdsRef.current.delete(tx.id);
+          localUpdatedTxRef.current.set(tx.id, tx);
+        });
+        const sortedTx = [...restoredTransactions].sort((a, b) => b.date.localeCompare(a.date));
+        setTransactions(sortedTx);
+        try {
+          localStorage.setItem('merlion_transactions_v1', JSON.stringify(sortedTx));
+        } catch {
+          // ignore
+        }
+      }
+
+      if (restoredHoldings.length > 0) {
+        restoredHoldings.forEach((h) => {
+          deletedIdsRef.current.delete(h.id);
+          localUpdatedHoldRef.current.set(h.id, h);
+        });
+        setHoldings(restoredHoldings);
+        try {
+          localStorage.setItem('merlion_holdings_v1', JSON.stringify(restoredHoldings));
+        } catch {
+          // ignore
+        }
       }
 
       showToast(
         `Backup ဖိုင်မှ စာရင်း (${restoredTransactions.length}) ခု နှင့် ရင်းနှီးမြှုပ်နှံမှု (${restoredHoldings.length}) ခု ပြန်တင်ပြီးပါပြီ`
       );
+
+      // 2. Sync to Firestore in background if signed in
+      if (currentUser) {
+        const uid = currentUser.uid;
+        (async () => {
+          try {
+            const configRef = doc(db, 'vaultConfigs', uid);
+            await updateDoc(configRef, {
+              sgdToMmkRate: nextRate,
+              bankOfficialRate: nextBankRate,
+              monthlySalarySgd: nextSalary,
+              monthlyRentSgd: nextRent,
+              monthlySavingsTargetSgd: nextSavingsTarget,
+              updatedAt: serverTimestamp(),
+            });
+
+            const existingTxIds = new Set(transactions.map((t) => t.id));
+            for (const tx of restoredTransactions) {
+              const txRef = doc(db, 'users', uid, 'transactions', tx.id);
+              if (existingTxIds.has(tx.id)) {
+                await updateDoc(txRef, {
+                  type: tx.type,
+                  category: tx.category,
+                  title: tx.title,
+                  amountSgd: tx.amountSgd,
+                  exchangeRateUsed: tx.exchangeRateUsed,
+                  amountMmk: tx.amountMmk,
+                  date: tx.date,
+                  recipientOrMerchant: tx.recipientOrMerchant,
+                  note: tx.note,
+                  updatedAt: serverTimestamp(),
+                });
+              } else {
+                await setDoc(txRef, {
+                  ownerId: uid,
+                  type: tx.type,
+                  category: tx.category,
+                  title: tx.title,
+                  amountSgd: tx.amountSgd,
+                  exchangeRateUsed: tx.exchangeRateUsed,
+                  amountMmk: tx.amountMmk,
+                  date: tx.date,
+                  recipientOrMerchant: tx.recipientOrMerchant,
+                  note: tx.note,
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                });
+              }
+            }
+
+            const existingHoldIds = new Set(holdings.map((h) => h.id));
+            for (const h of restoredHoldings) {
+              const holdRef = doc(db, 'users', uid, 'holdings', h.id);
+              if (existingHoldIds.has(h.id)) {
+                await updateDoc(holdRef, {
+                  assetType: h.assetType,
+                  symbol: h.symbol,
+                  name: h.name,
+                  quantity: h.quantity,
+                  avgBuyPriceSgd: h.avgBuyPriceSgd,
+                  currentPriceSgd: h.currentPriceSgd,
+                  platform: h.platform,
+                  note: h.note,
+                  updatedAt: serverTimestamp(),
+                });
+              } else {
+                await setDoc(holdRef, {
+                  ownerId: uid,
+                  assetType: h.assetType,
+                  symbol: h.symbol,
+                  name: h.name,
+                  quantity: h.quantity,
+                  avgBuyPriceSgd: h.avgBuyPriceSgd,
+                  currentPriceSgd: h.currentPriceSgd,
+                  platform: h.platform,
+                  note: h.note,
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                });
+              }
+            }
+          } catch {
+            // ignore background sync errors when offline
+          }
+        })();
+      }
     } catch (err) {
       setErrorBanner(
         err instanceof Error ? err.message : 'Backup ဖိုင် ပြန်တင်ရာတွင် အမှားရှိနေပါသည်။'
@@ -1331,28 +1575,40 @@ export default function App() {
     const uid = currentUser?.uid || 'local_sg_owner';
     const email = currentUser?.email || 'sg-user@merlionvault.app';
     const result = await registerBiometricPasskey(uid, email);
+    const nextPasskeyId = result.credentialId.slice(0, 256);
+
+    setVaultConfig((prev) => {
+      const updated = {
+        ...prev,
+        biometricEnabled: true,
+        passkeyId: nextPasskeyId,
+      };
+      try {
+        localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+    showToast('Biometric ချိတ်ဆက်ပြီးပါပြီ');
 
     if (currentUser) {
       const path = `vaultConfigs/${currentUser.uid}`;
-      try {
-        await updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
-          biometricEnabled: true,
-          passkeyId: result.credentialId.slice(0, 256),
-          pinCode: (vaultConfig.pinCode || '2026').slice(0, 64),
-          autoLockMinutes: Math.max(1, Math.min(1440, Number(autoLockDraft) || 15)),
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, path);
-      }
-    } else {
-      setVaultConfig((prev) => ({
-        ...prev,
+      updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
         biometricEnabled: true,
-        passkeyId: result.credentialId.slice(0, 256),
-      }));
+        passkeyId: nextPasskeyId,
+        pinCode: (vaultConfig.pinCode || '2026').slice(0, 64),
+        autoLockMinutes: Math.max(1, Math.min(1440, Number(autoLockDraft) || 15)),
+        updatedAt: serverTimestamp(),
+      }).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, path);
+        } catch {
+          // ignore
+        }
+      });
     }
-    showToast('Biometric ချိတ်ဆက်ပြီးပါပြီ');
   };
 
   const handleSaveSecuritySettings = async (e: React.FormEvent) => {
@@ -1379,26 +1635,20 @@ export default function App() {
       nextPinToSave = cleanNewPin;
     }
 
-    if (currentUser) {
-      const path = `vaultConfigs/${currentUser.uid}`;
-      try {
-        await updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
-          biometricEnabled: vaultConfig.biometricEnabled,
-          passkeyId: vaultConfig.passkeyId || 'sim_bio_default',
-          pinCode: nextPinToSave,
-          autoLockMinutes: sanitizedMinutes,
-          updatedAt: serverTimestamp(),
-        });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, path);
-      }
-    } else {
-      setVaultConfig((prev) => ({
+    // 1. Update local state & localStorage IMMEDIATELY
+    setVaultConfig((prev) => {
+      const updated = {
         ...prev,
         pinCode: nextPinToSave,
         autoLockMinutes: sanitizedMinutes,
-      }));
-    }
+      };
+      try {
+        localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
 
     setCurrentPinDraft('');
     setPinDraft('');
@@ -1407,7 +1657,30 @@ export default function App() {
     } catch {
       // ignore
     }
-    showToast(cleanNewPin.length > 0 ? 'PIN နံပါတ်အသစ်နှင့် လုံခြုံရေးချိန်ညှိချက် သိမ်းပြီးပါပြီ' : 'Auto-Lock အချိန် သိမ်းပြီးပါပြီ');
+    showToast(
+      cleanNewPin.length > 0
+        ? 'PIN နံပါတ်အသစ်နှင့် လုံခြုံရေးချိန်ညှိချက် သိမ်းပြီးပါပြီ'
+        : 'Auto-Lock အချိန် သိမ်းပြီးပါပြီ'
+    );
+
+    // 2. Sync to Firestore in background if signed in
+    if (currentUser) {
+      const path = `vaultConfigs/${currentUser.uid}`;
+      updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
+        biometricEnabled: vaultConfig.biometricEnabled,
+        passkeyId: vaultConfig.passkeyId || 'sim_bio_default',
+        pinCode: nextPinToSave,
+        autoLockMinutes: sanitizedMinutes,
+        updatedAt: serverTimestamp(),
+      }).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, path);
+        } catch {
+          // ignore
+        }
+      });
+    }
   };
 
   if (isVaultLocked) {
@@ -1459,6 +1732,11 @@ export default function App() {
               <span className="hidden lg:inline text-xs font-medium text-slate-400 dark:text-slate-500">
                 (Uchsar Pwar)
               </span>
+              {!isOnline && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                  Offline
+                </span>
+              )}
             </a>
 
             {/* Zone 2: 4 Clean Navigation Links (Tablet/Desktop) */}
