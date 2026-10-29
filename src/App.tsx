@@ -45,6 +45,9 @@ import {
   X,
   Smartphone,
   Share2,
+  Calendar,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import {
   BarChart,
@@ -86,6 +89,51 @@ import { BiometricLockScreen } from './components/BiometricLockScreen';
 import { EntryFormModal } from './components/EntryFormModal';
 
 type NavSection = 'overview' | 'cashflow' | 'portfolio' | 'settings';
+type TxViewMode = 'daily_grouped' | 'daily_summary' | 'table';
+
+const MYANMAR_MONTH_NAMES: Record<string, string> = {
+  '01': 'ဇန်နဝါရီလ',
+  '02': 'ဖေဖော်ဝါရီလ',
+  '03': 'မတ်လ',
+  '04': 'ဧပြီလ',
+  '05': 'မေလ',
+  '06': 'ဇွန်လ',
+  '07': 'ဇူလိုင်လ',
+  '08': 'ဩဂုတ်လ',
+  '09': 'စက်တင်ဘာလ',
+  '10': 'အောက်တိုဘာလ',
+  '11': 'နိုဝင်ဘာလ',
+  '12': 'ဒီဇင်ဘာလ',
+};
+
+const MYANMAR_WEEKDAYS = [
+  'တနင်္ဂနွေနေ့',
+  'တနင်္လာနေ့',
+  'အင်္ဂါနေ့',
+  'ဗုဒ္ဓဟူးနေ့',
+  'ကြာသပတေးနေ့',
+  'သောကြာနေ့',
+  'စနေနေ့',
+];
+
+function formatMyanmarMonthLabel(yyyyMm: string): string {
+  const parts = yyyyMm.split('-');
+  if (parts.length !== 2) return yyyyMm;
+  const [year, month] = parts;
+  return `${year} ${MYANMAR_MONTH_NAMES[month] || month}`;
+}
+
+function formatMyanmarDateWeekday(dateStr: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  const dt = new Date(`${dateStr}T00:00:00`);
+  if (Number.isNaN(dt.getTime())) return dateStr;
+  const weekday = MYANMAR_WEEKDAYS[dt.getDay()] || '';
+  const todayStr = new Date().toISOString().slice(0, 10);
+  if (dateStr === todayStr) {
+    return `${dateStr} · ${weekday} (ယနေ့)`;
+  }
+  return `${dateStr} · ${weekday}`;
+}
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('overview');
@@ -149,8 +197,14 @@ export default function App() {
     return INITIAL_HOLDINGS.map((h) => ({ ...h, ownerId: 'local_user' }));
   });
 
-  // Simple Filter & Search
+  // Simple Filter & Search + Daily/Monthly Browsing State
   const [txFilter, setTxFilter] = useState<'all' | 'income' | 'expense' | 'remittance' | 'savings'>('all');
+  const [txMonthFilter, setTxMonthFilter] = useState<string>('all');
+  const [txSpecificDate, setTxSpecificDate] = useState<string>('');
+  const [txViewMode, setTxViewMode] = useState<TxViewMode>('daily_grouped');
+  const [collapsedDays, setCollapsedDays] = useState<Set<string>>(new Set());
+  const [visibleDayLimit, setVisibleDayLimit] = useState<number>(15);
+  const [visibleTableLimit, setVisibleTableLimit] = useState<number>(30);
   const [holdingFilter, setHoldingFilter] = useState<'all' | 'stock' | 'etf' | 'crypto'>('all');
   const [txSearchQuery, setTxSearchQuery] = useState<string>('');
   const [isOverviewSearchOpen, setIsOverviewSearchOpen] = useState<boolean>(false);
@@ -736,11 +790,44 @@ export default function App() {
     setCalcSgd(sgdNeeded.toFixed(2));
   };
 
+  const availableMonths = useMemo(() => {
+    const monthSet = new Set<string>();
+    transactions.forEach((tx) => {
+      if (tx.date && tx.date.length >= 7) {
+        monthSet.add(tx.date.slice(0, 7));
+      }
+    });
+    return Array.from(monthSet).sort((a, b) => b.localeCompare(a));
+  }, [transactions]);
+
+  const latestTransactionDateStr = useMemo(() => {
+    const valid = transactions
+      .map((t) => t.date)
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .sort();
+    return valid.length > 0 ? valid[valid.length - 1] : new Date().toISOString().slice(0, 10);
+  }, [transactions]);
+
   const filteredTransactions = useMemo(() => {
     const q = txSearchQuery.trim().toLowerCase();
+    const anchorMs = new Date(`${latestTransactionDateStr}T00:00:00`).getTime();
+    const sevenDaysMs = 6 * 24 * 60 * 60 * 1000;
+
     return transactions.filter((tx) => {
       const matchesType = txFilter === 'all' ? true : tx.type === txFilter;
       if (!matchesType) return false;
+
+      if (txSpecificDate) {
+        if (tx.date !== txSpecificDate) return false;
+      } else if (txMonthFilter === '7days') {
+        const txMs = new Date(`${tx.date}T00:00:00`).getTime();
+        if (Number.isNaN(txMs) || anchorMs - txMs > sevenDaysMs || txMs > anchorMs) {
+          return false;
+        }
+      } else if (txMonthFilter !== 'all') {
+        if (!tx.date || !tx.date.startsWith(txMonthFilter)) return false;
+      }
+
       if (!q) return true;
 
       const catMeta = TRANSACTION_CATEGORIES.find((c) => c.labelEn === tx.category);
@@ -750,10 +837,130 @@ export default function App() {
         (tx.category || '').toLowerCase().includes(q) ||
         labelMm.includes(q) ||
         (tx.note || '').toLowerCase().includes(q) ||
-        (tx.recipientOrMerchant || '').toLowerCase().includes(q)
+        (tx.recipientOrMerchant || '').toLowerCase().includes(q) ||
+        (tx.date || '').toLowerCase().includes(q)
       );
     });
-  }, [transactions, txFilter, txSearchQuery]);
+  }, [
+    transactions,
+    txFilter,
+    txMonthFilter,
+    txSpecificDate,
+    txSearchQuery,
+    latestTransactionDateStr,
+  ]);
+
+  // Group filteredTransactions by Date (YYYY-MM-DD, newest day first) for Daily Ledger & Daily Summary views
+  const dailyTransactionGroups = useMemo(() => {
+    const dayMap = new Map<
+      string,
+      {
+        date: string;
+        weekdayLabel: string;
+        items: TransactionRecord[];
+        incomeSgd: number;
+        incomeMmk: number;
+        expenseSgd: number;
+        expenseMmk: number;
+        savingsSgd: number;
+        savingsMmk: number;
+        remittanceSgd: number;
+        remittanceMmk: number;
+        outflowSgd: number;
+        outflowMmk: number;
+        netSgd: number;
+        netMmk: number;
+      }
+    >();
+
+    filteredTransactions.forEach((tx) => {
+      const dateKey = tx.date || 'Unknown';
+      let group = dayMap.get(dateKey);
+      if (!group) {
+        group = {
+          date: dateKey,
+          weekdayLabel: formatMyanmarDateWeekday(dateKey),
+          items: [],
+          incomeSgd: 0,
+          incomeMmk: 0,
+          expenseSgd: 0,
+          expenseMmk: 0,
+          savingsSgd: 0,
+          savingsMmk: 0,
+          remittanceSgd: 0,
+          remittanceMmk: 0,
+          outflowSgd: 0,
+          outflowMmk: 0,
+          netSgd: 0,
+          netMmk: 0,
+        };
+        dayMap.set(dateKey, group);
+      }
+      group.items.push(tx);
+      if (tx.type === 'income') {
+        group.incomeSgd += tx.amountSgd;
+        group.incomeMmk += tx.amountMmk;
+      } else if (tx.type === 'savings') {
+        group.savingsSgd += tx.amountSgd;
+        group.savingsMmk += tx.amountMmk;
+        group.outflowSgd += tx.amountSgd;
+        group.outflowMmk += tx.amountMmk;
+      } else if (tx.type === 'remittance') {
+        group.remittanceSgd += tx.amountSgd;
+        group.remittanceMmk += tx.amountMmk;
+        group.outflowSgd += tx.amountSgd;
+        group.outflowMmk += tx.amountMmk;
+      } else {
+        group.expenseSgd += tx.amountSgd;
+        group.expenseMmk += tx.amountMmk;
+        group.outflowSgd += tx.amountSgd;
+        group.outflowMmk += tx.amountMmk;
+      }
+      group.netSgd = group.incomeSgd - group.outflowSgd;
+      group.netMmk = Math.round(group.netSgd * metrics.rate);
+    });
+
+    return Array.from(dayMap.values()).sort((a, b) => b.date.localeCompare(a.date));
+  }, [filteredTransactions, metrics.rate]);
+
+  // Recent 3 days across all transactions for the Overview quick glance
+  const recentOverviewDayGroups = useMemo(() => {
+    const dayMap = new Map<
+      string,
+      {
+        date: string;
+        weekdayLabel: string;
+        items: TransactionRecord[];
+        outflowSgd: number;
+        incomeSgd: number;
+      }
+    >();
+
+    transactions.forEach((tx) => {
+      const dateKey = tx.date || 'Unknown';
+      let g = dayMap.get(dateKey);
+      if (!g) {
+        g = {
+          date: dateKey,
+          weekdayLabel: formatMyanmarDateWeekday(dateKey),
+          items: [],
+          outflowSgd: 0,
+          incomeSgd: 0,
+        };
+        dayMap.set(dateKey, g);
+      }
+      g.items.push(tx);
+      if (tx.type === 'income') {
+        g.incomeSgd += tx.amountSgd;
+      } else {
+        g.outflowSgd += tx.amountSgd;
+      }
+    });
+
+    return Array.from(dayMap.values())
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 3);
+  }, [transactions]);
 
   // လက်ရှိ စာရင်း အနှစ်ချုပ် (Current Filtered Transactions Summary)
   const filteredCashflowSummary = useMemo(() => {
@@ -784,9 +991,13 @@ export default function App() {
 
     const netSgd = incomeSgd - expenseSgd - remittanceSgd - savingsSgd;
     const netMmk = Math.round(netSgd * metrics.rate);
+    const dayCount = dailyTransactionGroups.length;
+    const avgDailyExpenseSgd = dayCount > 0 ? expenseSgd / dayCount : 0;
 
     return {
       count: filteredTransactions.length,
+      dayCount,
+      avgDailyExpenseSgd,
       incomeSgd,
       incomeMmk,
       expenseSgd,
@@ -798,7 +1009,7 @@ export default function App() {
       netSgd,
       netMmk,
     };
-  }, [filteredTransactions, metrics.rate]);
+  }, [filteredTransactions, dailyTransactionGroups.length, metrics.rate]);
 
   // Weekly / Monthly / Yearly Expense Category Distribution for Recharts BarChart
   const expenseChartSummary = useMemo(() => {
@@ -2451,11 +2662,104 @@ export default function App() {
                   </div>
                 </div>
               </div>
+
+              {/* Card 4: Recent Daily Activity Preview (နောက်ဆုံး နေ့စဉ်စာရင်းများ) */}
+              {recentOverviewDayGroups.length > 0 && (
+                <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                        နောက်ဆုံး နေ့စဉ်စာရင်းများ (နောက်ဆုံး {recentOverviewDayGroups.length} ရက်)
+                      </h2>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        နေ့စဉ် ရက်အလိုက် မှတ်သားထားသော စာရင်းများ အမြန်ကြည့်ရှုရန်
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSection('cashflow')}
+                      className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    >
+                      ရက်အားလုံး အသေးစိတ်ကြည့်ရန် →
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {recentOverviewDayGroups.map((dayGroup) => (
+                      <div
+                        key={dayGroup.date}
+                        className="border border-slate-200/70 dark:border-slate-800 rounded-xl overflow-hidden"
+                      >
+                        <div className="bg-slate-50/90 dark:bg-slate-950/70 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/80">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                            <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>{dayGroup.weekdayLabel}</span>
+                            <span className="text-slate-400 font-normal">
+                              ({dayGroup.items.length} ခု)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs font-mono-tabular">
+                            {dayGroup.incomeSgd > 0 && (
+                              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                +{formatSgd(dayGroup.incomeSgd)}
+                              </span>
+                            )}
+                            {dayGroup.outflowSgd > 0 && (
+                              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                                -{formatSgd(dayGroup.outflowSgd)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 px-3.5">
+                          {dayGroup.items.slice(0, 4).map((tx) => (
+                            <div
+                              key={tx.id}
+                              onClick={() => openEditTransactionModal(tx)}
+                              className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                  {tx.title}
+                                </div>
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                                  {tx.category}
+                                  {tx.note ? ` · ${tx.note}` : ''}
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div
+                                  className={`font-mono-tabular text-xs sm:text-sm font-bold whitespace-nowrap ${
+                                    tx.type === 'income'
+                                      ? 'text-emerald-600 dark:text-emerald-400'
+                                      : tx.type === 'savings'
+                                      ? 'text-sky-600 dark:text-sky-400'
+                                      : tx.type === 'remittance'
+                                      ? 'text-amber-600 dark:text-amber-400'
+                                      : 'text-slate-900 dark:text-slate-100'
+                                  }`}
+                                >
+                                  {tx.type === 'income' ? '+' : tx.type === 'savings' ? '' : '-'}
+                                  {formatSgd(tx.amountSgd)}
+                                </div>
+                                <div className="text-[11px] text-slate-400 whitespace-nowrap">
+                                  {formatMyanmarLakhs(tx.amountMmk)}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* =========================================================
-              TAB 2: ဝင်ငွေ / အသုံးစရိတ် (With Search, Current Summary & Edit/Delete)
+              TAB 2: ဝင်ငွေ / အသုံးစရိတ် (Smart Daily Grouped Ledger, Daily Summary & Month/Date Filter)
              ========================================================= */}
           {activeSection === 'cashflow' && (
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 space-y-5">
@@ -2474,7 +2778,11 @@ export default function App() {
                     <button
                       key={tab.id}
                       type="button"
-                      onClick={() => setTxFilter(tab.id)}
+                      onClick={() => {
+                        setTxFilter(tab.id);
+                        setVisibleDayLimit(15);
+                        setVisibleTableLimit(30);
+                      }}
                       className={`min-h-[34px] px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                         txFilter === tab.id
                           ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
@@ -2496,14 +2804,102 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Search Input Field (Filter by Title, Category, or Note) */}
+              {/* Second Row: Month Selector + Specific Date Picker + View Mode Switcher */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Month / Period Filter Dropdown */}
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                      ကာလ:
+                    </label>
+                    <select
+                      value={txSpecificDate ? 'custom_date' : txMonthFilter}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val !== 'custom_date') {
+                          setTxSpecificDate('');
+                          setTxMonthFilter(val);
+                          setVisibleDayLimit(15);
+                          setVisibleTableLimit(30);
+                        }
+                      }}
+                      className="min-h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-600"
+                    >
+                      <option value="all">ကာလအားလုံး (All Dates)</option>
+                      <option value="7days">နောက်ဆုံး ၇ ရက်</option>
+                      {availableMonths.map((ym) => (
+                        <option key={ym} value={ym}>
+                          {formatMyanmarMonthLabel(ym)}
+                        </option>
+                      ))}
+                      {txSpecificDate && (
+                        <option value="custom_date">ရက်စွဲ: {txSpecificDate}</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {/* Direct Date Picker to jump to any single day */}
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="date"
+                      value={txSpecificDate}
+                      onChange={(e) => {
+                        setTxSpecificDate(e.target.value);
+                        setVisibleDayLimit(15);
+                      }}
+                      aria-label="ရက်စွဲအလိုက် ရွေးကြည့်ရန်"
+                      className="min-h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 font-mono-tabular text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-600"
+                    />
+                    {(txSpecificDate || txMonthFilter !== 'all') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTxSpecificDate('');
+                          setTxMonthFilter('all');
+                        }}
+                        className="min-h-[38px] px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        ရက်အားလုံးပြန်ပြ
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 3 View Modes: Daily Grouped | Daily Summary | Flat Table */}
+                <div className="flex items-center justify-between sm:justify-end gap-2">
+                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl overflow-x-auto">
+                    {(
+                      [
+                        { id: 'daily_grouped', label: 'နေ့စဉ် အုပ်စုဖွဲ့' },
+                        { id: 'daily_summary', label: 'ရက်အလိုက် အနှစ်ချုပ်' },
+                        { id: 'table', label: 'စာရင်းဇယား' },
+                      ] as const
+                    ).map((mode) => (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setTxViewMode(mode.id)}
+                        className={`min-h-[32px] px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                          txViewMode === mode.id
+                            ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                        }`}
+                      >
+                        {mode.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Input Field (Filter by Title, Category, Note, or Date) */}
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
                   value={txSearchQuery}
                   onChange={(e) => setTxSearchQuery(e.target.value)}
-                  placeholder="ခေါင်းစဉ်၊ အမျိုးအစား သို့မဟုတ် မှတ်ချက် (Note) ဖြင့် အမြန်ရှာဖွေရန်..."
+                  placeholder="ခေါင်းစဉ်၊ အမျိုးအစား၊ ရက်စွဲ သို့မဟုတ် မှတ်ချက် (Note) ဖြင့် အမြန်ရှာဖွေရန်..."
                   className="w-full min-h-[44px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600"
                 />
                 {txSearchQuery && (
@@ -2518,14 +2914,41 @@ export default function App() {
                 )}
               </div>
 
-              {/* လက်ရှိ စာရင်း အနှစ်ချုပ် (Current Filtered Summary) */}
+              {/* လက်ရှိ စာရင်း အနှစ်ချုပ် (Current Filtered Summary with Day Count & Daily Average) */}
               <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                    လက်ရှိ စာရင်း အနှစ်ချုပ်
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    <span>လက်ရှိ စာရင်း အနှစ်ချုပ်</span>
+                    <span className="text-slate-400 font-normal" aria-hidden="true">·</span>
+                    <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                      {txSpecificDate
+                        ? formatMyanmarDateWeekday(txSpecificDate)
+                        : txMonthFilter === 'all'
+                        ? 'ကာလအားလုံး'
+                        : txMonthFilter === '7days'
+                        ? 'နောက်ဆုံး ၇ ရက်'
+                        : formatMyanmarMonthLabel(txMonthFilter)}
+                    </span>
                   </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    စာရင်းအရေအတွက်: <span className="font-mono-tabular font-bold text-slate-900 dark:text-slate-100">{filteredCashflowSummary.count}</span> ခု
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span>
+                      စုစုပေါင်း <span className="font-mono-tabular font-bold text-slate-900 dark:text-slate-100">{filteredCashflowSummary.dayCount}</span> ရက်
+                    </span>
+                    <span aria-hidden="true">·</span>
+                    <span>
+                      စာရင်း <span className="font-mono-tabular font-bold text-slate-900 dark:text-slate-100">{filteredCashflowSummary.count}</span> ခု
+                    </span>
+                    {filteredCashflowSummary.dayCount > 0 && filteredCashflowSummary.expenseSgd > 0 && (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <span>
+                          တစ်ရက်ပျမ်းမျှအသုံး:{' '}
+                          <span className="font-mono-tabular font-semibold text-slate-800 dark:text-slate-200">
+                            {formatSgd(filteredCashflowSummary.avgDailyExpenseSgd)}
+                          </span>
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -2594,21 +3017,283 @@ export default function App() {
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     ရှာဖွေထားသော အချက်အလက်နှင့် ကိုက်ညီသည့် စာရင်း မတွေ့ပါ။
                   </p>
-                  {txSearchQuery && (
+                  {(txSearchQuery || txSpecificDate || txMonthFilter !== 'all' || txFilter !== 'all') && (
                     <button
                       type="button"
-                      onClick={() => setTxSearchQuery('')}
+                      onClick={() => {
+                        setTxSearchQuery('');
+                        setTxSpecificDate('');
+                        setTxMonthFilter('all');
+                        setTxFilter('all');
+                      }}
                       className="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
                     >
-                      ရှာဖွေမှု ပြန်ရှင်းမည်
+                      စစ်ထုတ်မှုအားလုံး ပြန်ရှင်းမည်
                     </button>
                   )}
                 </div>
+              ) : txViewMode === 'daily_grouped' ? (
+                /* =========================================================
+                   MODE 1: နေ့စဉ် အုပ်စုဖွဲ့ (Collapsible Daily Grouped Ledger)
+                   ========================================================= */
+                <div className="space-y-3.5">
+                  {dailyTransactionGroups.length > 1 && (
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+                      <span>
+                        နေ့စဉ် ရက်အလိုက် အုပ်စုဖွဲ့ပြသထားသည် (ရက်စွဲတန်းကိုနှိပ်၍ ချုံ့/ဖြန့်နိုင်သည်)
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (collapsedDays.size >= dailyTransactionGroups.length) {
+                            setCollapsedDays(new Set());
+                          } else {
+                            setCollapsedDays(new Set(dailyTransactionGroups.map((g) => g.date)));
+                          }
+                        }}
+                        className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+                      >
+                        {collapsedDays.size >= dailyTransactionGroups.length
+                          ? 'ရက်အားလုံး ဖြန့်မည်'
+                          : 'ရက်အားလုံး ချုံ့မည်'}
+                      </button>
+                    </div>
+                  )}
+
+                  {dailyTransactionGroups.slice(0, visibleDayLimit).map((dayGroup) => {
+                    const isCollapsed = collapsedDays.has(dayGroup.date);
+                    return (
+                      <div
+                        key={dayGroup.date}
+                        className="border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900"
+                      >
+                        {/* Day Header Bar */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCollapsedDays((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(dayGroup.date)) {
+                                next.delete(dayGroup.date);
+                              } else {
+                                next.add(dayGroup.date);
+                              }
+                              return next;
+                            });
+                          }}
+                          className="w-full px-3.5 sm:px-4 py-3 bg-slate-50/90 dark:bg-slate-950/80 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-left transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isCollapsed ? (
+                              <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            )}
+                            <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {dayGroup.weekdayLabel}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap shrink-0">
+                              · {dayGroup.items.length} ခု
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs font-mono-tabular shrink-0">
+                            {dayGroup.incomeSgd > 0 && (
+                              <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                                ဝင်ငွေ +{formatSgd(dayGroup.incomeSgd)}
+                              </span>
+                            )}
+                            {dayGroup.outflowSgd > 0 && (
+                              <span className="font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                                ထွက်ငွေ -{formatSgd(dayGroup.outflowSgd)}
+                              </span>
+                            )}
+                            <span className="text-[11px] font-sans font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                              ({formatMyanmarLakhs(dayGroup.outflowSgd > 0 ? dayGroup.outflowMmk : dayGroup.incomeMmk)})
+                            </span>
+                          </div>
+                        </button>
+
+                        {/* Day Items List */}
+                        {!isCollapsed && (
+                          <div className="divide-y divide-slate-100 dark:divide-slate-800/80 px-3.5 sm:px-4">
+                            {dayGroup.items.map((tx) => (
+                              <div
+                                key={tx.id}
+                                className="py-3 flex items-center justify-between gap-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                              >
+                                <div
+                                  onClick={() => openEditTransactionModal(tx)}
+                                  className="min-w-0 flex-1 cursor-pointer"
+                                >
+                                  <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                    {tx.title}
+                                  </div>
+                                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                                    <span>{tx.category}</span>
+                                    {tx.recipientOrMerchant && tx.recipientOrMerchant !== 'Singapore' ? (
+                                      <>
+                                        <span className="mx-1.5" aria-hidden="true">·</span>
+                                        <span>{tx.recipientOrMerchant}</span>
+                                      </>
+                                    ) : null}
+                                    {tx.note ? (
+                                      <>
+                                        <span className="mx-1.5" aria-hidden="true">·</span>
+                                        <span className="text-slate-400">{tx.note}</span>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                </div>
+
+                                <div className="text-right shrink-0 flex items-center gap-1.5 sm:gap-2">
+                                  <div className="mr-0.5">
+                                    <div
+                                      className={`font-mono-tabular text-xs sm:text-sm font-bold whitespace-nowrap ${
+                                        tx.type === 'income'
+                                          ? 'text-emerald-600 dark:text-emerald-400'
+                                          : tx.type === 'savings'
+                                          ? 'text-sky-600 dark:text-sky-400'
+                                          : tx.type === 'remittance'
+                                          ? 'text-amber-600 dark:text-amber-400'
+                                          : 'text-slate-900 dark:text-slate-100'
+                                      }`}
+                                    >
+                                      {tx.type === 'income' ? '+' : tx.type === 'savings' ? '' : '-'}
+                                      {formatSgd(tx.amountSgd)}
+                                    </div>
+                                    <div className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                                      {formatMyanmarLakhs(tx.amountMmk)}
+                                    </div>
+                                  </div>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditTransactionModal(tx)}
+                                    className="h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
+                                    aria-label="Edit"
+                                  >
+                                    <Edit3 className="w-3 h-3 shrink-0" />
+                                    <span className="hidden sm:inline">ပြင်မည်</span>
+                                    <span className="sm:hidden">ပြင်</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteTransaction(tx.id)}
+                                    className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 shrink-0 cursor-pointer"
+                                    aria-label="Delete"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+
+                  {dailyTransactionGroups.length > visibleDayLimit && (
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleDayLimit((prev) => prev + 15)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                      >
+                        နောက်ထပ် ရက်များ ဆက်ကြည့်မည် (ကျန် {dailyTransactionGroups.length - visibleDayLimit} ရက်)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleDayLimit(dailyTransactionGroups.length)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
+                      >
+                        ရက်အားလုံး ပြမည် ({dailyTransactionGroups.length} ရက်)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : txViewMode === 'daily_summary' ? (
+                /* =========================================================
+                   MODE 2: ရက်အလိုက် အနှစ်ချုပ် (Compact Daily Summary Table)
+                   ========================================================= */
+                <div className="space-y-3">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 px-1">
+                    ရက်တစ်ရက်ချင်းစီ၏ စုစုပေါင်း စာရင်းချုပ်ဖြစ်ပါသည်။ ရက်စွဲကိုနှိပ်ပါက ထိုနေ့၏ စာရင်းအသေးစိတ်ကို တန်းကြည့်နိုင်ပါသည်။
+                  </div>
+                  <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                          <th className="py-3 px-4 font-semibold whitespace-nowrap">ရက်စွဲနှင့် နေ့ရက်</th>
+                          <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">အရေအတွက်</th>
+                          <th className="py-3 px-3 font-semibold text-right whitespace-nowrap">နေ့စဉ် ဝင်ငွေ</th>
+                          <th className="py-3 px-3 font-semibold text-right whitespace-nowrap">နေ့စဉ် ထွက်ငွေ</th>
+                          <th className="py-3 px-4 font-semibold text-right whitespace-nowrap">မြန်မာငွေ တန်ဖိုး</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
+                        {dailyTransactionGroups.slice(0, visibleDayLimit).map((dayGroup) => (
+                          <tr
+                            key={dayGroup.date}
+                            onClick={() => {
+                              setTxSpecificDate(dayGroup.date);
+                              setTxViewMode('daily_grouped');
+                              setCollapsedDays(new Set());
+                            }}
+                            className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                          >
+                            <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                              {dayGroup.weekdayLabel}
+                            </td>
+                            <td className="py-3.5 px-3 text-center font-mono-tabular text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                              {dayGroup.items.length} ခု
+                            </td>
+                            <td className="py-3.5 px-3 font-mono-tabular font-bold text-right text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                              {dayGroup.incomeSgd > 0 ? `+${formatSgd(dayGroup.incomeSgd)}` : '—'}
+                            </td>
+                            <td className="py-3.5 px-3 font-mono-tabular font-bold text-right text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                              {dayGroup.outflowSgd > 0 ? `-${formatSgd(dayGroup.outflowSgd)}` : '—'}
+                            </td>
+                            <td className="py-3.5 px-4 text-right font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                              {formatMyanmarLakhs(
+                                dayGroup.outflowSgd > 0 ? dayGroup.outflowMmk : dayGroup.incomeMmk
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {dailyTransactionGroups.length > visibleDayLimit && (
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleDayLimit((prev) => prev + 20)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                      >
+                        နောက်ထပ် ရက်များ ဆက်ကြည့်မည် (ကျန် {dailyTransactionGroups.length - visibleDayLimit} ရက်)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleDayLimit(dailyTransactionGroups.length)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                      >
+                        ရက်အားလုံး ပြမည်
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (
+                /* =========================================================
+                   MODE 3: စာရင်းဇယား (Classic Paginated Table & Mobile List)
+                   ========================================================= */
                 <>
                   {/* Mobile View: Clean Rows with Both Edit & Delete Buttons */}
                   <div className="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
-                    {filteredTransactions.map((tx) => (
+                    {filteredTransactions.slice(0, visibleTableLimit).map((tx) => (
                       <div key={tx.id} className="py-3.5 flex items-center justify-between gap-2.5">
                         <div
                           onClick={() => openEditTransactionModal(tx)}
@@ -2686,7 +3371,7 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                        {filteredTransactions.map((tx) => (
+                        {filteredTransactions.slice(0, visibleTableLimit).map((tx) => (
                           <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                             <td className="py-3.5 pr-4 font-mono-tabular text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                               {tx.date}
@@ -2742,6 +3427,25 @@ export default function App() {
                       </tbody>
                     </table>
                   </div>
+
+                  {filteredTransactions.length > visibleTableLimit && (
+                    <div className="pt-3 flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleTableLimit((prev) => prev + 30)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                      >
+                        နောက်ထပ် စာရင်းများ ဆက်ကြည့်မည် (ကျန် {filteredTransactions.length - visibleTableLimit} ခု)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleTableLimit(filteredTransactions.length)}
+                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                      >
+                        စာရင်းအားလုံး ပြမည် ({filteredTransactions.length} ခု)
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
