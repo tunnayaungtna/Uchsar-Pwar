@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Merlion Kyat Vault — SG & MM Personal Finance & Portfolio Tracker</title>
+    <meta name="description" content="Personal expense, salary, remittance (SGD to MMK), stock & Bitcoin investment tracker for Myanmar professionals in Singapore with biometric WebAuthn lock." />
+    <meta property="og:title" content="Merlion Kyat Vault — SG & MM Personal Finance & Portfolio Tracker" />
+    <meta property="og:description" content="Personal expense, salary, remittance (SGD to MMK), stock & Bitcoin investment tracker for Myanmar professionals in Singapore with biometric WebAuthn lock." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#073b4c" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ဥစ္စာပွား" />
+    <link id="app-manifest" rel="manifest" href="./assets/app.json?v=4" />
+    <link id="app-favicon" rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=4" />
+    <link id="app-touch-icon" rel="apple-touch-icon" sizes="512x512" href="./icon-512.png?v=4" />
+    <script>
+      window.__deferredPwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        window.__deferredPwaPrompt = e;
+        window.dispatchEvent(new CustomEvent('uchsar-pwa-prompt-ready'));
+      });
+      (function () {
+        var primaryIcon = './assets/aistudio/my_walet_40feb1c8.png';
+        var fallbackIcon = './public/assets/aistudio/my_walet_40feb1c8.png';
+
+        function applySquareIconFromImage(img) {
+          try {
+            var size = 512;
+            var canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.fillStyle = '#073b4c';
+            ctx.fillRect(0, 0, size, size);
+            var scale = Math.min(size / img.naturalWidth, size / img.naturalHeight);
+            var drawW = Math.round(img.naturalWidth * scale);
+            var drawH = Math.round(img.naturalHeight * scale);
+            var offsetX = Math.round((size - drawW) / 2);
+            var offsetY = Math.round((size - drawH) / 2);
+            ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+            var squareDataUrl = canvas.toDataURL('image/png');
+            var fav = document.getElementById('app-favicon');
+            var touch = document.getElementById('app-touch-icon');
+            if (fav) fav.href = squareDataUrl;
+            if (touch) touch.href = squareDataUrl;
+          } catch (err) {
+            // ignore canvas errors
+          }
+        }
+
+        var testImg = new Image();
+        testImg.crossOrigin = 'anonymous';
+        testImg.onload = function () {
+          applySquareIconFromImage(testImg);
+        };
+        testImg.onerror = function () {
+          if (!testImg.dataset.fallback) {
+            testImg.dataset.fallback = '1';
+            testImg.src = fallbackIcon;
+          }
+        };
+        testImg.src = primaryIcon;
+
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', function () {
+            navigator.serviceWorker.register('./sw.js?v=5', { scope: './' }).catch(function () {});
+          });
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+
+    <script>
+      window.__bootGitHubPagesSource = async function () {
+        if (window.__UCHSAR_PWAR_MOUNTED__ || window.__UCHSAR_PWAR_BOOTING__) return;
+        window.__UCHSAR_PWAR_BOOTING__ = true;
+
+        function loadScript(src) {
+          return new Promise(function (resolve, reject) {
+            var s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+
+        function toBlobUrl(jsCode) {
+          return URL.createObjectURL(new Blob([jsCode], { type: 'text/javascript' }));
+        }
+
+        var rootLoading = document.getElementById('root');
+        if (rootLoading && !rootLoading.innerHTML.trim()) {
+          rootLoading.innerHTML =
+            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#059669;font-size:14px;font-weight:600;">ဥစ္စာပွား (Uchsar Pwar) ဖွင့်နေပါသည်...</div>';
+        }
+
+        try {
+          var twStyle = document.createElement('style');
+          twStyle.setAttribute('type', 'text/tailwindcss');
+          twStyle.textContent =
+            '@import "tailwindcss";\n@custom-variant dark (&:where(.dark, .dark *));\n@layer base { :root, body { font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; } .font-mono-tabular { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; } }';
+          document.head.appendChild(twStyle);
+
+          await Promise.all([
+            loadScript('https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'),
+            loadScript('https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.9/babel.min.js'),
+          ]);
+
+          async function fetchText(relPath) {
+            var res = await fetch(relPath);
+            if (!res.ok) throw new Error('Failed to load ' + relPath);
+            return await res.text();
+          }
+
+          function transpileTsx(source, filename) {
+            return window.Babel.transform(source, {
+              filename: filename,
+              presets: [
+                ['typescript', { isTSX: true, allExtensions: true }],
+                ['react', { runtime: 'classic' }],
+              ],
+            }).code;
+          }
+
+          var rawFiles = await Promise.all([
+            fetchText('./firebase-applet-config.json'),
+            fetchText('./src/types.ts'),
+            fetchText('./src/utils/sampleData.ts'),
+            fetchText('./src/utils/webauthn.ts'),
+            fetchText('./src/firebase.ts'),
+            fetchText('./src/components/BiometricLockScreen.tsx'),
+            fetchText('./src/components/EntryFormModal.tsx'),
+            fetchText('./src/components/ErrorBoundary.tsx'),
+            fetchText('./src/App.tsx'),
+            fetchText('./src/main.tsx'),
+          ]);
+
+          var configUrl = toBlobUrl('export default ' + rawFiles[0] + ';');
+          var typesUrl = toBlobUrl(transpileTsx(rawFiles[1], 'types.ts'));
+          var sampleDataUrl = toBlobUrl(
+            transpileTsx(
+              rawFiles[2].replace(/from\s+['"]\.\.\/types['"]/g, 'from "' + typesUrl + '"'),
+              'sampleData.ts'
+            )
+          );
+          var webauthnUrl = toBlobUrl(transpileTsx(rawFiles[3], 'webauthn.ts'));
+          var firebaseUrl = toBlobUrl(
+            transpileTsx(
+              rawFiles[4].replace(
+                /from\s+['"]\.\.\/firebase-applet-config\.json['"]/g,
+                'from "' + configUrl + '"'
+              ),
+              'firebase.ts'
+            )
+          );
+          var lockScreenUrl = toBlobUrl(
+            transpileTsx(
+              rawFiles[5].replace(
+                /from\s+['"]\.\.\/utils\/webauthn['"]/g,
+                'from "' + webauthnUrl + '"'
+              ),
+              'BiometricLockScreen.tsx'
+            )
+          );
+          var modalUrl = toBlobUrl(
+            transpileTsx(
+              rawFiles[6].replace(/from\s+['"]\.\.\/types['"]/g, 'from "' + typesUrl + '"'),
+              'EntryFormModal.tsx'
+            )
+          );
+          var errorBoundaryUrl = toBlobUrl(transpileTsx(rawFiles[7], 'ErrorBoundary.tsx'));
+
+          var appSource = rawFiles[8]
+            .replace(/from\s+['"]\.\/firebase['"]/g, 'from "' + firebaseUrl + '"')
+            .replace(/from\s+['"]\.\/types['"]/g, 'from "' + typesUrl + '"')
+            .replace(/from\s+['"]\.\/utils\/sampleData['"]/g, 'from "' + sampleDataUrl + '"')
+            .replace(/from\s+['"]\.\/utils\/webauthn['"]/g, 'from "' + webauthnUrl + '"')
+            .replace(
+              /from\s+['"]\.\/components\/BiometricLockScreen['"]/g,
+              'from "' + lockScreenUrl + '"'
+            )
+            .replace(
+              /from\s+['"]\.\/components\/EntryFormModal['"]/g,
+              'from "' + modalUrl + '"'
+            );
+          var appUrl = toBlobUrl(transpileTsx(appSource, 'App.tsx'));
+
+          var mainSource = rawFiles[9]
+            .replace(/import\s+['"]\.\/index\.css['"];?/g, '')
+            .replace(/from\s+['"]\.\/App(?:\.tsx)?['"]/g, 'from "' + appUrl + '"')
+            .replace(
+              /from\s+['"]\.\/components\/ErrorBoundary(?:\.tsx)?['"]/g,
+              'from "' + errorBoundaryUrl + '"'
+            );
+          var mainUrl = toBlobUrl(transpileTsx(mainSource, 'main.tsx'));
+
+          var modScript = document.createElement('script');
+          modScript.type = 'module';
+          modScript.src = mainUrl;
+          document.body.appendChild(modScript);
+        } catch (err) {
+          console.error('GitHub Pages Bootstrap Error:', err);
+          var rootEl = document.getElementById('root');
+          if (rootEl && !window.__UCHSAR_PWAR_MOUNTED__) {
+            rootEl.innerHTML =
+              '<div style="padding:24px;font-family:sans-serif;max-width:480px;margin:40px auto;border:1px solid #fecaca;background:#fef2f2;border-radius:16px;color:#991b1b;font-size:13px;">' +
+              '<strong>GitHub Pages Loading Error:</strong><br/>' +
+              String(err && err.message ? err.message : err) +
+              '</div>';
+          }
+        }
+      };
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/": "https://esm.sh/react@18.3.1/",
+          "react-dom": "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+          "lucide-react": "https://esm.sh/lucide-react@0.477.0?deps=react@18.3.1",
+          "recharts": "https://esm.sh/recharts@2.15.1?deps=react@18.3.1,react-dom@18.3.1",
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="./assets/app.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/app.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      var hasViteBundle = !!document.querySelector('script[src*="./assets/app.js"]');
+      if (window.location.hostname.endsWith('github.io') && !hasViteBundle) {
+        window.__bootGitHubPagesSource();
+      } else {
+        window.addEventListener('load', function () {
+          setTimeout(function () {
+            if (!window.__UCHSAR_PWAR_MOUNTED__) {
+              window.__bootGitHubPagesSource();
+            }
+          }, 800);
+        });
+      }
+    </script>
+  </body>
+</html>
+
+
+
+
