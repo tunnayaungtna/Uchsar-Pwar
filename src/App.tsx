@@ -728,11 +728,13 @@ export default function App() {
       }
     });
 
-    const cashInHandSgd = Math.max(
-      0,
-      totalIncomeSgd - totalExpenseSgd - totalRemittanceSgd - totalSavingsSgd
-    );
-    const cashInHandMmk = Math.round(cashInHandSgd * rate);
+    const netBalanceSgd =
+      totalIncomeSgd - totalExpenseSgd - totalRemittanceSgd - totalSavingsSgd;
+    const netBalanceMmk = Math.round(netBalanceSgd * rate);
+    const totalOutflowSgd = totalExpenseSgd + totalRemittanceSgd + totalSavingsSgd;
+    const totalOutflowMmk = totalExpenseMmk + totalRemittanceMmk + totalSavingsMmk;
+    const cashInHandSgd = netBalanceSgd;
+    const cashInHandMmk = netBalanceMmk;
 
     let portfolioCostSgd = 0;
     let portfolioValueSgd = 0;
@@ -759,6 +761,10 @@ export default function App() {
       totalRemittanceMmk,
       totalSavingsSgd,
       totalSavingsMmk,
+      totalOutflowSgd,
+      totalOutflowMmk,
+      netBalanceSgd,
+      netBalanceMmk,
       cashInHandSgd,
       cashInHandMmk,
       portfolioCostSgd,
@@ -933,6 +939,7 @@ export default function App() {
         items: TransactionRecord[];
         outflowSgd: number;
         incomeSgd: number;
+        netSgd: number;
       }
     >();
 
@@ -946,6 +953,7 @@ export default function App() {
           items: [],
           outflowSgd: 0,
           incomeSgd: 0,
+          netSgd: 0,
         };
         dayMap.set(dateKey, g);
       }
@@ -955,6 +963,7 @@ export default function App() {
       } else {
         g.outflowSgd += tx.amountSgd;
       }
+      g.netSgd = g.incomeSgd - g.outflowSgd;
     });
 
     return Array.from(dayMap.values())
@@ -2216,7 +2225,9 @@ export default function App() {
                       </div>
 
                       <div className="min-w-0 col-span-2 sm:col-span-1">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">အသားတင်</div>
+                        <div className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 truncate">
+                          လက်ကျန်ငွေ
+                        </div>
                         <div
                           className={`mt-0.5 font-mono-tabular text-xs sm:text-sm font-bold truncate ${
                             filteredCashflowSummary.netSgd >= 0
@@ -2226,6 +2237,9 @@ export default function App() {
                         >
                           {filteredCashflowSummary.netSgd >= 0 ? '+' : ''}
                           {formatSgd(filteredCashflowSummary.netSgd)}
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate">
+                          {formatMyanmarLakhs(filteredCashflowSummary.netMmk)}
                         </div>
                       </div>
                     </div>
@@ -2352,32 +2366,47 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Main Dual-Currency Balance Display */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start sm:items-end">
+                {/* Main Dual-Currency Remaining Balance (လက်ကျန်ငွေ) Display */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start sm:items-end bg-emerald-50/50 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-800/60 rounded-2xl p-4 sm:p-5">
                   <div className="min-w-0">
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      လက်ထဲရှိ စင်ကာပူငွေ (SGD လက်ကျန်)
+                    <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      <span>လက်ကျန်ငွေ (SGD လက်ကျန်)</span>
                     </div>
-                    <div className="mt-1.5 font-mono-tabular text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 break-words">
-                      {formatSgd(metrics.cashInHandSgd)}
+                    <div
+                      className={`mt-1.5 font-mono-tabular text-2xl sm:text-4xl font-bold tracking-tight break-words ${
+                        metrics.netBalanceSgd >= 0
+                          ? 'text-slate-900 dark:text-slate-100'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {formatSgd(metrics.netBalanceSgd)}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                      ဝင်ငွေ ({formatSgd(metrics.totalIncomeSgd)}) − စုစုပေါင်းအသုံး/စုငွေ/အိမ်ပို့ ({formatSgd(metrics.totalOutflowSgd)})
                     </div>
                   </div>
 
-                  <div className="sm:text-right min-w-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800/80">
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                      လက်ရှိ မြန်မာငွေပေါက်ဈေးအရ တန်ဖိုး
+                  <div className="sm:text-right min-w-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-emerald-200/60 dark:border-emerald-800/60">
+                    <div className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      လက်ကျန်ငွေ (မြန်မာငွေတန်ဖိုး)
                     </div>
-                    <div className="mt-1.5 text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400 break-words">
-                      {formatMyanmarLakhs(metrics.cashInHandMmk)}
+                    <div
+                      className={`mt-1.5 text-xl sm:text-2xl font-bold break-words ${
+                        metrics.netBalanceMmk >= 0
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {formatMyanmarLakhs(metrics.netBalanceMmk)}
                     </div>
-                    <div className="mt-0.5 font-mono-tabular text-xs text-slate-400">
-                      {formatMmk(metrics.cashInHandMmk)}
+                    <div className="mt-0.5 font-mono-tabular text-xs text-slate-500 dark:text-slate-400">
+                      {formatMmk(metrics.netBalanceMmk)}
                     </div>
                   </div>
                 </div>
 
-                {/* 5 Clean Key Metrics in a Responsive Non-Overlapping Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3 pt-2">
+                {/* 6 Clean Key Metrics (including လက်ကျန်ငွေ) in a Responsive Non-Overlapping Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 pt-1">
                   <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 min-w-0">
                     <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
                       ဝင်ငွေ
@@ -2427,8 +2456,29 @@ export default function App() {
                   </div>
 
                   <div
+                    onClick={() => setActiveSection('cashflow')}
+                    className="bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-300/80 dark:border-emerald-800 hover:border-emerald-500 rounded-xl p-3 min-w-0 transition-colors cursor-pointer"
+                  >
+                    <div className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 truncate">
+                      လက်ကျန်ငွေ
+                    </div>
+                    <div
+                      className={`mt-1 font-mono-tabular text-sm sm:text-base font-bold truncate ${
+                        metrics.netBalanceSgd >= 0
+                          ? 'text-emerald-700 dark:text-emerald-400'
+                          : 'text-red-600 dark:text-red-400'
+                      }`}
+                    >
+                      {formatSgd(metrics.netBalanceSgd)}
+                    </div>
+                    <div className="mt-0.5 text-[11px] font-medium text-emerald-700/80 dark:text-emerald-400/80 truncate">
+                      {formatMyanmarLakhs(metrics.netBalanceMmk)}
+                    </div>
+                  </div>
+
+                  <div
                     onClick={() => setActiveSection('portfolio')}
-                    className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 hover:border-emerald-500/60 rounded-xl p-3 min-w-0 col-span-2 sm:col-span-1 transition-colors cursor-pointer"
+                    className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 hover:border-emerald-500/60 rounded-xl p-3 min-w-0 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-1">
                       <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
@@ -2672,7 +2722,11 @@ export default function App() {
                         နောက်ဆုံး နေ့စဉ်စာရင်းများ (နောက်ဆုံး {recentOverviewDayGroups.length} ရက်)
                       </h2>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        နေ့စဉ် ရက်အလိုက် မှတ်သားထားသော စာရင်းများ အမြန်ကြည့်ရှုရန်
+                        လက်ရှိ စုစုပေါင်း လက်ကျန်ငွေ:{' '}
+                        <span className="font-mono-tabular font-bold text-emerald-600 dark:text-emerald-400">
+                          {formatSgd(metrics.netBalanceSgd)}
+                        </span>{' '}
+                        ({formatMyanmarLakhs(metrics.netBalanceMmk)})
                       </p>
                     </div>
                     <button
@@ -2698,17 +2752,27 @@ export default function App() {
                               ({dayGroup.items.length} ခု)
                             </span>
                           </div>
-                          <div className="flex items-center gap-3 text-xs font-mono-tabular">
+                          <div className="flex flex-wrap items-center gap-3 text-xs font-mono-tabular">
                             {dayGroup.incomeSgd > 0 && (
                               <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                                +{formatSgd(dayGroup.incomeSgd)}
+                                ဝင်ငွေ +{formatSgd(dayGroup.incomeSgd)}
                               </span>
                             )}
                             {dayGroup.outflowSgd > 0 && (
                               <span className="font-semibold text-slate-700 dark:text-slate-300">
-                                -{formatSgd(dayGroup.outflowSgd)}
+                                အသုံး -{formatSgd(dayGroup.outflowSgd)}
                               </span>
                             )}
+                            <span
+                              className={`font-bold ${
+                                dayGroup.netSgd >= 0
+                                  ? 'text-emerald-600 dark:text-emerald-400'
+                                  : 'text-slate-900 dark:text-slate-100'
+                              }`}
+                            >
+                              နေ့စဉ်လက်ကျန်: {dayGroup.netSgd >= 0 ? '+' : ''}
+                              {formatSgd(dayGroup.netSgd)}
+                            </span>
                           </div>
                         </div>
 
