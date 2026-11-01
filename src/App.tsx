@@ -1919,11 +1919,11 @@ export default function App() {
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col pb-24 md:pb-12 transition-colors">
-        {/* Smart 3-Zone Top Bar */}
-        <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800">
+      <div className="min-h-screen neu-app-bg text-slate-800 dark:text-slate-100 flex flex-col pb-24 md:pb-12 transition-colors">
+        {/* Smart 3-Zone Neumorphic Top Bar */}
+        <header className="sticky top-0 z-30 neu-header">
           <div className="max-w-5xl w-full mx-auto flex items-center justify-between gap-3 sm:gap-6 px-4 sm:px-6 h-16">
-            {/* Zone 1: Brand with Application Icon */}
+            {/* Zone 1: Brand with Tactile Neumorphic Application Icon Frame */}
             <a
               href="#overview"
               onClick={(e) => {
@@ -1932,45 +1932,47 @@ export default function App() {
               }}
               className="flex items-center gap-2.5 text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100 whitespace-nowrap shrink-0 min-w-0"
             >
-              <span className="w-9 h-9 aspect-square rounded-xl overflow-hidden bg-[#073b4c] p-0.5 shrink-0 inline-flex items-center justify-center shadow-xs">
-                <img
-                  src="./assets/aistudio/my_walet_40feb1c8.png"
-                  onError={(e) => {
-                    const img = e.currentTarget;
-                    if (!img.dataset.fallback) {
-                      img.dataset.fallback = '1';
-                      img.src =
-                        './public/assets/aistudio/my_walet_40feb1c8.png';
-                    }
-                  }}
-                  alt="ဥစ္စာပွား (Uchsar Pwar)"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain object-center"
-                />
+              <span className="w-10 h-10 aspect-square rounded-2xl neu-icon-frame p-1 shrink-0 inline-flex items-center justify-center">
+                <span className="w-full h-full rounded-xl overflow-hidden bg-[#073b4c] p-0.5 inline-flex items-center justify-center">
+                  <img
+                    src="./assets/aistudio/my_walet_40feb1c8.png"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.dataset.fallback) {
+                        img.dataset.fallback = '1';
+                        img.src =
+                          './public/assets/aistudio/my_walet_40feb1c8.png';
+                      }
+                    }}
+                    alt="ဥစ္စာပွား (Uchsar Pwar)"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain object-center"
+                  />
+                </span>
               </span>
               <span className="truncate">ဥစ္စာပွား</span>
-              <span className="hidden lg:inline text-xs font-medium text-slate-400 dark:text-slate-500">
+              <span className="hidden lg:inline text-xs font-medium text-slate-500 dark:text-slate-400">
                 (Uchsar Pwar)
               </span>
               {!isOnline && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-amber-800 dark:text-amber-300">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-xl neu-inset-sm text-[11px] font-semibold text-amber-700 dark:text-amber-300">
                   Offline
                 </span>
               )}
             </a>
 
-            {/* Zone 2: 4 Clean Navigation Links (Tablet/Desktop) */}
-            <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium text-slate-500 dark:text-slate-400">
+            {/* Zone 2: Sculpted Neumorphic Navigation Track (Tablet/Desktop) */}
+            <nav className="hidden md:flex items-center gap-1.5 p-1.5 rounded-2xl neu-inset text-xs lg:text-sm font-medium text-slate-600 dark:text-slate-400">
               <a
                 href="#overview"
                 onClick={(e) => {
                   e.preventDefault();
                   setActiveSection('overview');
                 }}
-                className={`hover:text-slate-900 dark:hover:text-slate-100 transition-colors whitespace-nowrap shrink-0 py-1 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0 ${
                   activeSection === 'overview'
-                    ? 'text-emerald-600 dark:text-emerald-400 font-bold underline underline-offset-8 decoration-2'
-                    : ''
+                    ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
+                    : 'hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 ပင်မ
@@ -1981,10 +1983,10 @@ export default function App() {
                   e.preventDefault();
                   setActiveSection('cashflow');
                 }}
-                className={`hover:text-slate-900 dark:hover:text-slate-100 transition-colors whitespace-nowrap shrink-0 py-1 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0 ${
                   activeSection === 'cashflow'
-                    ? 'text-emerald-600 dark:text-emerald-400 font-bold underline underline-offset-8 decoration-2'
-                    : ''
+                    ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
+                    : 'hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 ဝင်ငွေ / အသုံးစရိတ်
@@ -1995,10 +1997,10 @@ export default function App() {
                   e.preventDefault();
                   setActiveSection('portfolio');
                 }}
-                className={`hover:text-slate-900 dark:hover:text-slate-100 transition-colors whitespace-nowrap shrink-0 py-1 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0 ${
                   activeSection === 'portfolio'
-                    ? 'text-emerald-600 dark:text-emerald-400 font-bold underline underline-offset-8 decoration-2'
-                    : ''
+                    ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
+                    : 'hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 စတော့ / Bitcoin
@@ -2009,18 +2011,18 @@ export default function App() {
                   e.preventDefault();
                   setActiveSection('settings');
                 }}
-                className={`hover:text-slate-900 dark:hover:text-slate-100 transition-colors whitespace-nowrap shrink-0 py-1 ${
+                className={`px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap shrink-0 ${
                   activeSection === 'settings'
-                    ? 'text-emerald-600 dark:text-emerald-400 font-bold underline underline-offset-8 decoration-2'
-                    : ''
+                    ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
+                    : 'hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
                 ဆက်တင် (Backup)
               </a>
             </nav>
 
-            {/* Zone 3: Unified Smart Utility Dock (Search, Day/Night, Lock) */}
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200/70 dark:border-slate-700/70 shrink-0">
+            {/* Zone 3: Unified Neumorphic Utility Dock (Search, Day/Night, Lock) */}
+            <div className="flex items-center gap-1.5 p-1.5 rounded-2xl neu-inset shrink-0">
               <button
                 type="button"
                 onClick={() => {
@@ -2033,10 +2035,10 @@ export default function App() {
                 }}
                 aria-label="Search and filter transactions"
                 title="စာရင်းရှာဖွေရန်နှင့် စစ်ထုတ်ရန်"
-                className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                className={`h-8 px-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                   isOverviewSearchOpen && activeSection === 'overview'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900'
+                    ? 'neu-btn-primary'
+                    : 'neu-btn text-slate-700 dark:text-slate-200'
                 }`}
               >
                 <Search className="w-3.5 h-3.5 shrink-0" />
@@ -2048,7 +2050,7 @@ export default function App() {
                 onClick={() => setIsDark((prev) => !prev)}
                 aria-label="Toggle Day/Night Mode"
                 title={isDark ? 'Switch to Day Mode' : 'Switch to Night Mode'}
-                className="h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 {isDark ? (
                   <>
@@ -2069,7 +2071,7 @@ export default function App() {
                   onClick={handleInstallAppClick}
                   aria-label="Install app on phone"
                   title="ဖုန်းတွင် Application Icon ဖြင့် သွင်းရန်"
-                  className="h-8 px-2.5 rounded-lg text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50/90 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                  className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="hidden sm:inline">App သွင်းရန်</span>
@@ -2081,7 +2083,7 @@ export default function App() {
                 onClick={() => setIsVaultLocked(true)}
                 aria-label="Lock application"
                 title="သော့ခတ်ရန်"
-                className="h-8 px-2.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-900 flex items-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+                className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span className="hidden sm:inline">Lock</span>
@@ -2091,29 +2093,29 @@ export default function App() {
         </header>
 
         {/* Focused, Responsive Workspace Container */}
-        <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6 flex-1 space-y-5">
+        <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 pt-5 sm:pt-6 flex-1 space-y-6">
           {toastMessage && (
-            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 text-xs font-medium flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl neu-emerald-well text-emerald-800 dark:text-emerald-200 text-xs font-semibold flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>{toastMessage}</span>
             </div>
           )}
 
           {errorBanner && (
-            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 text-xs font-medium flex items-center gap-2">
+            <div className="p-3.5 rounded-2xl neu-inset text-red-700 dark:text-red-300 text-xs font-semibold flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorBanner}</span>
             </div>
           )}
 
           {/* =========================================================
-              TAB 1: ပင်မ (Smart, Responsive Overview)
+              TAB 1: ပင်မ (Smart, Responsive Overview - Premium Neumorphism)
              ========================================================= */}
           {activeSection === 'overview' && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               {/* Collapsible Search & Filter Panel in ပင်မ Tab (Triggered via Search Icon) */}
               {isOverviewSearchOpen && (
-                <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/80 rounded-2xl p-4 sm:p-5 space-y-4">
+                <div className="neu-card rounded-3xl p-4 sm:p-6 space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2 min-w-0">
                       <Search className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -2124,7 +2126,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsOverviewSearchOpen(false)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer shrink-0"
+                      className="p-2 rounded-xl neu-btn text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer shrink-0"
                       aria-label="Close search panel"
                     >
                       <X className="w-4 h-4" />
@@ -2140,7 +2142,7 @@ export default function App() {
                       value={txSearchQuery}
                       onChange={(e) => setTxSearchQuery(e.target.value)}
                       placeholder="ခေါင်းစဉ်၊ အမျိုးအစား သို့မဟုတ် မှတ်ချက် (Note) ဖြင့် ရှာဖွေရန်..."
-                      className="w-full min-h-[42px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600"
+                      className="w-full min-h-[44px] neu-input rounded-2xl pl-10 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                     />
                     {txSearchQuery && (
                       <button
@@ -2155,7 +2157,7 @@ export default function App() {
                   </div>
 
                   {/* Filter Tabs */}
-                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl overflow-x-auto">
+                  <div className="flex items-center gap-1.5 p-1.5 neu-inset rounded-2xl overflow-x-auto">
                     {(
                       [
                         { id: 'all', label: 'အားလုံး' },
@@ -2169,9 +2171,9 @@ export default function App() {
                         key={tab.id}
                         type="button"
                         onClick={() => setTxFilter(tab.id)}
-                        className={`min-h-[34px] px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        className={`min-h-[34px] px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                           txFilter === tab.id
-                            ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                            ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
                             : 'text-slate-500 dark:text-slate-400'
                         }`}
                       >
@@ -2181,7 +2183,7 @@ export default function App() {
                   </div>
 
                   {/* လက်ရှိ စာရင်း အနှစ်ချုပ် (Current Filtered Summary) */}
-                  <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-xl p-3.5 space-y-2.5">
+                  <div className="neu-inset rounded-2xl p-4 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         လက်ရှိ စာရင်း အနှစ်ချုပ်
@@ -2293,7 +2295,7 @@ export default function App() {
                             <button
                               type="button"
                               onClick={() => openEditTransactionModal(tx)}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap shrink-0 cursor-pointer"
+                              className="px-3 py-1 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap shrink-0 cursor-pointer"
                             >
                               ပြင်
                             </button>
@@ -2305,10 +2307,10 @@ export default function App() {
                 </div>
               )}
 
-              {/* Card 1: Smart Hero Balance & Summary Card (Contains Live Exchange Rate + ONLY ONE Add Entry Button) */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-5">
+              {/* Card 1: Smart Neumorphic Hero Balance & Summary Card */}
+              <div className="neu-card rounded-3xl p-5 sm:p-6 space-y-5">
                 {/* Card Header Bar: Integrated Live Exchange Rate + Single Primary Action Button */}
-                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800/80">
+                <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-300/60 dark:border-slate-800/80">
                   <div className="flex items-center gap-2 text-xs sm:text-sm">
                     <span className="text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
                       ပေါက်ဈေး
@@ -2318,7 +2320,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setIsEditingRate(true)}
-                        className="inline-flex items-center gap-1.5 font-mono-tabular font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl neu-inset-sm font-mono-tabular font-bold text-slate-900 dark:text-slate-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
                       >
                         <span>1 SGD = {metrics.rate.toLocaleString()} ကျပ်</span>
                         <span className="font-sans text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 underline underline-offset-4">
@@ -2333,11 +2335,11 @@ export default function App() {
                           min="100"
                           value={rateDraft}
                           onChange={(e) => setRateDraft(e.target.value)}
-                          className="w-24 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg px-2.5 py-1 font-mono-tabular text-xs font-bold focus:outline-none focus:border-emerald-600"
+                          className="w-24 neu-input rounded-xl px-2.5 py-1.5 font-mono-tabular text-xs font-bold"
                         />
                         <button
                           type="submit"
-                          className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-xs font-semibold whitespace-nowrap cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl neu-btn-primary text-xs font-semibold whitespace-nowrap cursor-pointer"
                         >
                           သိမ်းမည်
                         </button>
@@ -2347,7 +2349,7 @@ export default function App() {
                             setRateDraft(String(metrics.rate));
                             setIsEditingRate(false);
                           }}
-                          className="px-2 py-1 rounded-lg text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-xl neu-btn text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                         >
                           ပယ်ဖျက်
                         </button>
@@ -2359,15 +2361,15 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => openAddModal('expense')}
-                    className="min-h-[40px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
+                    className="min-h-[42px] px-4 py-2 rounded-2xl neu-btn-primary text-xs sm:text-sm font-semibold inline-flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Plus className="w-4 h-4 shrink-0" />
                     <span>စာရင်းသွင်းမည်</span>
                   </button>
                 </div>
 
-                {/* Main Dual-Currency Remaining Balance (လက်ကျန်ငွေ) Display */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start sm:items-end bg-emerald-50/50 dark:bg-emerald-950/25 border border-emerald-200/70 dark:border-emerald-800/60 rounded-2xl p-4 sm:p-5">
+                {/* Main Dual-Currency Remaining Balance (လက်ကျန်ငွေ) Sculpted Neumorphic Well */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 items-start sm:items-end neu-emerald-well rounded-2xl p-4 sm:p-5">
                   <div className="min-w-0">
                     <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-300">
                       <span>လက်ကျန်ငွေ (SGD လက်ကျန်)</span>
@@ -2386,7 +2388,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="sm:text-right min-w-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-emerald-200/60 dark:border-emerald-800/60">
+                  <div className="sm:text-right min-w-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-emerald-500/20 dark:border-emerald-800/60">
                     <div className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
                       လက်ကျန်ငွေ (မြန်မာငွေတန်ဖိုး)
                     </div>
@@ -2405,59 +2407,59 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 6 Clean Key Metrics (including လက်ကျန်ငွေ) in a Responsive Non-Overlapping Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 pt-1">
-                  <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 min-w-0">
-                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                {/* 6 Clean Tactile Neumorphic Key Metrics (including လက်ကျန်ငွေ) */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+                  <div className="neu-card-sm rounded-2xl p-3.5 min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       ဝင်ငွေ
                     </div>
                     <div className="mt-1 font-mono-tabular text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 truncate">
                       +{formatSgd(metrics.totalIncomeSgd)}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate">
+                    <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {formatMyanmarLakhs(metrics.totalIncomeMmk)}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 min-w-0">
-                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="neu-card-sm rounded-2xl p-3.5 min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       အသုံးစရိတ်
                     </div>
                     <div className="mt-1 font-mono-tabular text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                       -{formatSgd(metrics.totalExpenseSgd)}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate">
+                    <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {formatMyanmarLakhs(metrics.totalExpenseMmk)}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 min-w-0">
-                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="neu-card-sm rounded-2xl p-3.5 min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       စုငွေ
                     </div>
                     <div className="mt-1 font-mono-tabular text-sm sm:text-base font-bold text-sky-600 dark:text-sky-400 truncate">
                       {formatSgd(metrics.totalSavingsSgd)}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate">
+                    <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {formatMyanmarLakhs(metrics.totalSavingsMmk)}
                     </div>
                   </div>
 
-                  <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3 min-w-0">
-                    <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                  <div className="neu-card-sm rounded-2xl p-3.5 min-w-0">
+                    <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                       အိမ်ပို့ငွေ
                     </div>
                     <div className="mt-1 font-mono-tabular text-sm sm:text-base font-bold text-amber-600 dark:text-amber-400 truncate">
                       -{formatSgd(metrics.totalRemittanceSgd)}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate">
+                    <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {formatMyanmarLakhs(metrics.totalRemittanceMmk)}
                     </div>
                   </div>
 
                   <div
                     onClick={() => setActiveSection('cashflow')}
-                    className="bg-emerald-50/80 dark:bg-emerald-950/50 border border-emerald-300/80 dark:border-emerald-800 hover:border-emerald-500 rounded-xl p-3 min-w-0 transition-colors cursor-pointer"
+                    className="neu-emerald-card neu-card-sm-interactive rounded-2xl p-3.5 min-w-0 cursor-pointer"
                   >
                     <div className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 truncate">
                       လက်ကျန်ငွေ
@@ -2478,10 +2480,10 @@ export default function App() {
 
                   <div
                     onClick={() => setActiveSection('portfolio')}
-                    className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 hover:border-emerald-500/60 rounded-xl p-3 min-w-0 transition-colors cursor-pointer"
+                    className="neu-card-sm neu-card-sm-interactive rounded-2xl p-3.5 min-w-0 cursor-pointer"
                   >
                     <div className="flex items-center justify-between gap-1">
-                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate">
+                      <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
                         စတော့ / BTC
                       </span>
                       <span
@@ -2498,7 +2500,7 @@ export default function App() {
                     <div className="mt-1 font-mono-tabular text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                       {formatSgd(metrics.portfolioValueSgd)}
                     </div>
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate">
+                    <div className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
                       {formatMyanmarLakhs(metrics.portfolioValueMmk)}
                     </div>
                   </div>
@@ -2506,9 +2508,9 @@ export default function App() {
               </div>
 
               {/* Responsive 2-Column Workspace on Web (Chart + Quick SGD⇄MMK Calculator) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
                 {/* Card 2: Expense Category Distribution Bar Chart (7 cols on Web) */}
-                <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                <div className="lg:col-span-7 neu-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -2528,7 +2530,7 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl">
+                      <div className="flex items-center gap-1 p-1.5 neu-inset rounded-2xl">
                         {(
                           [
                             { id: 'weekly', label: 'အပတ်စဉ်' },
@@ -2540,9 +2542,9 @@ export default function App() {
                             key={tab.id}
                             type="button"
                             onClick={() => setExpensePeriod(tab.id)}
-                            className={`min-h-[30px] px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                            className={`min-h-[30px] px-2.5 py-1 text-xs font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                               expensePeriod === tab.id
-                                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                                ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
                                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                             }`}
                           >
@@ -2554,10 +2556,10 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => setIncludeRemittanceInChart((prev) => !prev)}
-                        className={`min-h-[32px] px-2.5 py-1 rounded-xl border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        className={`min-h-[34px] px-3 py-1 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                           includeRemittanceInChart
-                            ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400'
+                            ? 'neu-btn text-amber-700 dark:text-amber-300'
+                            : 'neu-inset-sm text-slate-500 dark:text-slate-400'
                         }`}
                       >
                         {includeRemittanceInChart ? 'အိမ်ပို့ငွေ ပါဝင်သည်' : 'အိမ်ပို့ငွေ မပါဝင်ပါ'}
@@ -2566,13 +2568,13 @@ export default function App() {
                   </div>
 
                   {expenseChartSummary.data.length === 0 ? (
-                    <div className="py-10 text-center space-y-3 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                    <div className="py-10 text-center space-y-3 neu-inset rounded-2xl">
                       <p className="text-xs text-slate-500 dark:text-slate-400">
                         ရွေးချယ်ထားသော ကာလအတွင်း အသုံးစရိတ်စာရင်း မရှိသေးပါ။
                       </p>
                     </div>
                   ) : (
-                    <div className="h-64 w-full pt-1">
+                    <div className="h-64 w-full pt-2 px-2 rounded-2xl neu-inset-sm">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart
                           data={expenseChartSummary.data}
@@ -2660,7 +2662,7 @@ export default function App() {
                 </div>
 
                 {/* Card 3: Smart SGD ⇄ MMK Calculator (5 cols on Web) */}
-                <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between space-y-4">
+                <div className="lg:col-span-5 neu-card rounded-3xl p-5 sm:p-6 flex flex-col justify-between space-y-4">
                   <div className="space-y-4">
                     <div>
                       <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -2673,7 +2675,7 @@ export default function App() {
 
                     <div className="space-y-3.5">
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                           စင်ကာပူဒေါ်လာ (SGD)
                         </label>
                         <input
@@ -2682,12 +2684,12 @@ export default function App() {
                           min="0"
                           value={calcSgd}
                           onChange={(e) => handleCalcSgdChange(e.target.value)}
-                          className="w-full min-h-[46px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 font-mono-tabular text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:border-emerald-600"
+                          className="w-full min-h-[48px] neu-input rounded-2xl px-4 font-mono-tabular text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                           မြန်မာငွေ (သိန်းပေါင်း)
                         </label>
                         <input
@@ -2696,17 +2698,17 @@ export default function App() {
                           min="0"
                           value={calcLakhs}
                           onChange={(e) => handleCalcLakhsChange(e.target.value)}
-                          className="w-full min-h-[46px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 font-mono-tabular text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 focus:outline-none focus:border-emerald-600"
+                          className="w-full min-h-[48px] neu-input rounded-2xl px-4 font-mono-tabular text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  <div className="p-3.5 rounded-2xl neu-inset-sm flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="font-bold text-emerald-700 dark:text-emerald-400">
                       {formatMyanmarLakhs((parseFloat(calcSgd) || 0) * metrics.rate)}
                     </span>
-                    <span className="font-mono-tabular">
+                    <span className="font-mono-tabular font-semibold">
                       {formatMmk((parseFloat(calcSgd) || 0) * metrics.rate)}
                     </span>
                   </div>
@@ -2715,7 +2717,7 @@ export default function App() {
 
               {/* Card 4: Recent Daily Activity Preview (နောက်ဆုံး နေ့စဉ်စာရင်းများ) */}
               {recentOverviewDayGroups.length > 0 && (
-                <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 sm:p-6 space-y-4">
+                <div className="neu-card rounded-3xl p-5 sm:p-6 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
@@ -2732,23 +2734,23 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setActiveSection('cashflow')}
-                      className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                      className="min-h-[38px] px-4 py-1.5 rounded-2xl neu-btn text-xs font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       ရက်အားလုံး အသေးစိတ်ကြည့်ရန် →
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     {recentOverviewDayGroups.map((dayGroup) => (
                       <div
                         key={dayGroup.date}
-                        className="border border-slate-200/70 dark:border-slate-800 rounded-xl overflow-hidden"
+                        className="neu-card-sm rounded-2xl overflow-hidden"
                       >
-                        <div className="bg-slate-50/90 dark:bg-slate-950/70 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/80">
+                        <div className="neu-inset-sm px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
                           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
                             <Calendar className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             <span>{dayGroup.weekdayLabel}</span>
-                            <span className="text-slate-400 font-normal">
+                            <span className="text-slate-500 font-normal">
                               ({dayGroup.items.length} ခု)
                             </span>
                           </div>
@@ -2776,12 +2778,12 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800/80 px-3.5">
+                        <div className="divide-y divide-slate-300/50 dark:divide-slate-800/80 px-4">
                           {dayGroup.items.slice(0, 4).map((tx) => (
                             <div
                               key={tx.id}
                               onClick={() => openEditTransactionModal(tx)}
-                              className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors"
+                              className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:opacity-85 transition-opacity"
                             >
                               <div className="min-w-0 flex-1">
                                 <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">
@@ -2807,7 +2809,7 @@ export default function App() {
                                   {tx.type === 'income' ? '+' : tx.type === 'savings' ? '' : '-'}
                                   {formatSgd(tx.amountSgd)}
                                 </div>
-                                <div className="text-[11px] text-slate-400 whitespace-nowrap">
+                                <div className="text-[11px] text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                   {formatMyanmarLakhs(tx.amountMmk)}
                                 </div>
                               </div>
@@ -2823,13 +2825,13 @@ export default function App() {
           )}
 
           {/* =========================================================
-              TAB 2: ဝင်ငွေ / အသုံးစရိတ် (Smart Daily Grouped Ledger, Daily Summary & Month/Date Filter)
+              TAB 2: ဝင်ငွေ / အသုံးစရိတ် (Premium Neumorphism Daily Ledger)
              ========================================================= */}
           {activeSection === 'cashflow' && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 space-y-5">
+            <div className="neu-card rounded-3xl p-4 sm:p-6 space-y-5">
               {/* Top Row: Category Filter Tabs + Add Button */}
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl overflow-x-auto max-w-full">
+                <div className="flex items-center gap-1.5 p-1.5 neu-inset rounded-2xl overflow-x-auto max-w-full">
                   {(
                     [
                       { id: 'all', label: 'အားလုံး' },
@@ -2847,9 +2849,9 @@ export default function App() {
                         setVisibleDayLimit(15);
                         setVisibleTableLimit(30);
                       }}
-                      className={`min-h-[34px] px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                      className={`min-h-[34px] px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                         txFilter === tab.id
-                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                          ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
                           : 'text-slate-500 dark:text-slate-400'
                       }`}
                     >
@@ -2861,7 +2863,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => openAddModal(txFilter === 'all' ? 'expense' : txFilter)}
-                  className="min-h-[38px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
+                  className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 shrink-0" />
                   <span>စာရင်းအသစ်ထည့်မည်</span>
@@ -2870,10 +2872,10 @@ export default function App() {
 
               {/* Second Row: Month Selector + Specific Date Picker + View Mode Switcher */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
                   {/* Month / Period Filter Dropdown */}
                   <div className="flex items-center gap-1.5">
-                    <label className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                    <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       ကာလ:
                     </label>
                     <select
@@ -2887,7 +2889,7 @@ export default function App() {
                           setVisibleTableLimit(30);
                         }
                       }}
-                      className="min-h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 text-xs font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-600"
+                      className="min-h-[38px] neu-input rounded-xl px-3 text-xs font-semibold text-slate-800 dark:text-slate-100"
                     >
                       <option value="all">ကာလအားလုံး (All Dates)</option>
                       <option value="7days">နောက်ဆုံး ၇ ရက်</option>
@@ -2903,7 +2905,7 @@ export default function App() {
                   </div>
 
                   {/* Direct Date Picker to jump to any single day */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <input
                       type="date"
                       value={txSpecificDate}
@@ -2912,7 +2914,7 @@ export default function App() {
                         setVisibleDayLimit(15);
                       }}
                       aria-label="ရက်စွဲအလိုက် ရွေးကြည့်ရန်"
-                      className="min-h-[38px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 font-mono-tabular text-xs text-slate-700 dark:text-slate-200 focus:outline-none focus:border-emerald-600"
+                      className="min-h-[38px] neu-input rounded-xl px-2.5 font-mono-tabular text-xs text-slate-700 dark:text-slate-200"
                     />
                     {(txSpecificDate || txMonthFilter !== 'all') && (
                       <button
@@ -2921,7 +2923,7 @@ export default function App() {
                           setTxSpecificDate('');
                           setTxMonthFilter('all');
                         }}
-                        className="min-h-[38px] px-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap shrink-0 cursor-pointer"
+                        className="min-h-[38px] px-3 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap shrink-0 cursor-pointer"
                       >
                         ရက်အားလုံးပြန်ပြ
                       </button>
@@ -2931,7 +2933,7 @@ export default function App() {
 
                 {/* 3 View Modes: Daily Grouped | Daily Summary | Flat Table */}
                 <div className="flex items-center justify-between sm:justify-end gap-2">
-                  <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl overflow-x-auto">
+                  <div className="flex items-center gap-1.5 p-1.5 neu-inset rounded-2xl overflow-x-auto">
                     {(
                       [
                         { id: 'daily_grouped', label: 'နေ့စဉ် အုပ်စုဖွဲ့' },
@@ -2943,9 +2945,9 @@ export default function App() {
                         key={mode.id}
                         type="button"
                         onClick={() => setTxViewMode(mode.id)}
-                        className={`min-h-[32px] px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                        className={`min-h-[32px] px-3 py-1 text-xs font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                           txViewMode === mode.id
-                            ? 'bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-400 shadow-xs'
+                            ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                         }`}
                       >
@@ -2964,7 +2966,7 @@ export default function App() {
                   value={txSearchQuery}
                   onChange={(e) => setTxSearchQuery(e.target.value)}
                   placeholder="ခေါင်းစဉ်၊ အမျိုးအစား၊ ရက်စွဲ သို့မဟုတ် မှတ်ချက် (Note) ဖြင့် အမြန်ရှာဖွေရန်..."
-                  className="w-full min-h-[44px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-10 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:border-emerald-600"
+                  className="w-full min-h-[44px] neu-input rounded-2xl pl-10 pr-10 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
                 />
                 {txSearchQuery && (
                   <button
@@ -2979,7 +2981,7 @@ export default function App() {
               </div>
 
               {/* လက်ရှိ စာရင်း အနှစ်ချုပ် (Current Filtered Summary with Day Count & Daily Average) */}
-              <div className="bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3">
+              <div className="neu-inset rounded-2xl p-4 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200">
                     <span>လက်ရှိ စာရင်း အနှစ်ချုပ်</span>
@@ -3077,7 +3079,7 @@ export default function App() {
               </div>
 
               {filteredTransactions.length === 0 ? (
-                <div className="py-10 text-center space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                <div className="py-10 text-center space-y-3 neu-inset rounded-2xl">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     ရှာဖွေထားသော အချက်အလက်နှင့် ကိုက်ညီသည့် စာရင်း မတွေ့ပါ။
                   </p>
@@ -3090,7 +3092,7 @@ export default function App() {
                         setTxMonthFilter('all');
                         setTxFilter('all');
                       }}
-                      className="px-3.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
+                      className="px-4 py-2 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 cursor-pointer"
                     >
                       စစ်ထုတ်မှုအားလုံး ပြန်ရှင်းမည်
                     </button>
@@ -3100,7 +3102,7 @@ export default function App() {
                 /* =========================================================
                    MODE 1: နေ့စဉ် အုပ်စုဖွဲ့ (Collapsible Daily Grouped Ledger)
                    ========================================================= */
-                <div className="space-y-3.5">
+                <div className="space-y-4">
                   {dailyTransactionGroups.length > 1 && (
                     <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
                       <span>
@@ -3115,7 +3117,7 @@ export default function App() {
                             setCollapsedDays(new Set(dailyTransactionGroups.map((g) => g.date)));
                           }
                         }}
-                        className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+                        className="px-3 py-1 rounded-xl neu-btn font-semibold text-emerald-700 dark:text-emerald-400 whitespace-nowrap shrink-0 cursor-pointer"
                       >
                         {collapsedDays.size >= dailyTransactionGroups.length
                           ? 'ရက်အားလုံး ဖြန့်မည်'
@@ -3129,7 +3131,7 @@ export default function App() {
                     return (
                       <div
                         key={dayGroup.date}
-                        className="border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900"
+                        className="neu-card-sm rounded-2xl overflow-hidden"
                       >
                         {/* Day Header Bar */}
                         <button
@@ -3145,7 +3147,7 @@ export default function App() {
                               return next;
                             });
                           }}
-                          className="w-full px-3.5 sm:px-4 py-3 bg-slate-50/90 dark:bg-slate-950/80 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 flex flex-wrap items-center justify-between gap-2 text-left transition-colors cursor-pointer"
+                          className="w-full px-4 py-3 neu-inset-sm flex flex-wrap items-center justify-between gap-2 text-left transition-all cursor-pointer"
                         >
                           <div className="flex items-center gap-2 min-w-0">
                             {isCollapsed ? (
@@ -3180,11 +3182,11 @@ export default function App() {
 
                         {/* Day Items List */}
                         {!isCollapsed && (
-                          <div className="divide-y divide-slate-100 dark:divide-slate-800/80 px-3.5 sm:px-4">
+                          <div className="divide-y divide-slate-300/50 dark:divide-slate-800/80 px-4">
                             {dayGroup.items.map((tx) => (
                               <div
                                 key={tx.id}
-                                className="py-3 flex items-center justify-between gap-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+                                className="py-3 flex items-center justify-between gap-2.5"
                               >
                                 <div
                                   onClick={() => openEditTransactionModal(tx)}
@@ -3234,7 +3236,7 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => openEditTransactionModal(tx)}
-                                    className="h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
+                                    className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                                     aria-label="Edit"
                                   >
                                     <Edit3 className="w-3 h-3 shrink-0" />
@@ -3245,7 +3247,7 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteTransaction(tx.id)}
-                                    className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 shrink-0 cursor-pointer"
+                                    className="h-8 w-8 rounded-xl neu-btn flex items-center justify-center text-slate-500 hover:text-red-500 shrink-0 cursor-pointer"
                                     aria-label="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -3260,18 +3262,18 @@ export default function App() {
                   })}
 
                   {dailyTransactionGroups.length > visibleDayLimit && (
-                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => setVisibleDayLimit((prev) => prev + 15)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
                       >
                         နောက်ထပ် ရက်များ ဆက်ကြည့်မည် (ကျန် {dailyTransactionGroups.length - visibleDayLimit} ရက်)
                       </button>
                       <button
                         type="button"
                         onClick={() => setVisibleDayLimit(dailyTransactionGroups.length)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-emerald-700 dark:text-emerald-400 cursor-pointer"
                       >
                         ရက်အားလုံး ပြမည် ({dailyTransactionGroups.length} ရက်)
                       </button>
@@ -3282,14 +3284,14 @@ export default function App() {
                 /* =========================================================
                    MODE 2: ရက်အလိုက် အနှစ်ချုပ် (Compact Daily Summary Table)
                    ========================================================= */
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   <div className="text-xs text-slate-500 dark:text-slate-400 px-1">
                     ရက်တစ်ရက်ချင်းစီ၏ စုစုပေါင်း စာရင်းချုပ်ဖြစ်ပါသည်။ ရက်စွဲကိုနှိပ်ပါက ထိုနေ့၏ စာရင်းအသေးစိတ်ကို တန်းကြည့်နိုင်ပါသည်။
                   </div>
-                  <div className="overflow-x-auto border border-slate-200/80 dark:border-slate-800 rounded-xl">
+                  <div className="overflow-x-auto neu-inset rounded-2xl p-1">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                        <tr className="border-b border-slate-300/60 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
                           <th className="py-3 px-4 font-semibold whitespace-nowrap">ရက်စွဲနှင့် နေ့ရက်</th>
                           <th className="py-3 px-3 font-semibold text-center whitespace-nowrap">အရေအတွက်</th>
                           <th className="py-3 px-3 font-semibold text-right whitespace-nowrap">နေ့စဉ် ဝင်ငွေ</th>
@@ -3297,7 +3299,7 @@ export default function App() {
                           <th className="py-3 px-4 font-semibold text-right whitespace-nowrap">မြန်မာငွေ တန်ဖိုး</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-xs sm:text-sm">
+                      <tbody className="divide-y divide-slate-300/50 dark:divide-slate-800 text-xs sm:text-sm">
                         {dailyTransactionGroups.slice(0, visibleDayLimit).map((dayGroup) => (
                           <tr
                             key={dayGroup.date}
@@ -3306,7 +3308,7 @@ export default function App() {
                               setTxViewMode('daily_grouped');
                               setCollapsedDays(new Set());
                             }}
-                            className="hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors"
+                            className="hover:opacity-80 cursor-pointer transition-opacity"
                           >
                             <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                               {dayGroup.weekdayLabel}
@@ -3332,18 +3334,18 @@ export default function App() {
                   </div>
 
                   {dailyTransactionGroups.length > visibleDayLimit && (
-                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+                    <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => setVisibleDayLimit((prev) => prev + 20)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
                       >
                         နောက်ထပ် ရက်များ ဆက်ကြည့်မည် (ကျန် {dailyTransactionGroups.length - visibleDayLimit} ရက်)
                       </button>
                       <button
                         type="button"
                         onClick={() => setVisibleDayLimit(dailyTransactionGroups.length)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-emerald-700 dark:text-emerald-400 cursor-pointer"
                       >
                         ရက်အားလုံး ပြမည်
                       </button>
@@ -3356,7 +3358,7 @@ export default function App() {
                    ========================================================= */
                 <>
                   {/* Mobile View: Clean Rows with Both Edit & Delete Buttons */}
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800 md:hidden">
+                  <div className="divide-y divide-slate-300/50 dark:divide-slate-800 md:hidden">
                     {filteredTransactions.slice(0, visibleTableLimit).map((tx) => (
                       <div key={tx.id} className="py-3.5 flex items-center justify-between gap-2.5">
                         <div
@@ -3402,7 +3404,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => openEditTransactionModal(tx)}
-                            className="h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
+                            className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                             aria-label="Edit"
                           >
                             <Edit3 className="w-3 h-3 shrink-0" />
@@ -3412,7 +3414,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleDeleteTransaction(tx.id)}
-                            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 shrink-0 cursor-pointer"
+                            className="h-8 w-8 rounded-xl neu-btn flex items-center justify-center text-slate-500 hover:text-red-500 shrink-0 cursor-pointer"
                             aria-label="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -3423,21 +3425,21 @@ export default function App() {
                   </div>
 
                   {/* Tablet & Web View: Clean 5-Column Table with Explicit Edit Button */}
-                  <div className="hidden md:block overflow-x-auto">
+                  <div className="hidden md:block overflow-x-auto neu-inset rounded-2xl p-2">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-                          <th className="py-3 pr-4 font-medium whitespace-nowrap">ရက်စွဲ</th>
+                        <tr className="border-b border-slate-300/60 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                          <th className="py-3 pl-3 pr-4 font-medium whitespace-nowrap">ရက်စွဲ</th>
                           <th className="py-3 px-4 font-medium">အကြောင်းအရာ</th>
                           <th className="py-3 px-4 font-medium text-right whitespace-nowrap">စင်ကာပူငွေ (SGD)</th>
                           <th className="py-3 px-4 font-medium text-right whitespace-nowrap">မြန်မာငွေ (သိန်း)</th>
-                          <th className="py-3 pl-4 font-medium text-right whitespace-nowrap">ပြင်ဆင် / ဖျက်ရန်</th>
+                          <th className="py-3 pl-4 pr-3 font-medium text-right whitespace-nowrap">ပြင်ဆင် / ဖျက်ရန်</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                      <tbody className="divide-y divide-slate-300/50 dark:divide-slate-800 text-sm">
                         {filteredTransactions.slice(0, visibleTableLimit).map((tx) => (
-                          <tr key={tx.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                            <td className="py-3.5 pr-4 font-mono-tabular text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                          <tr key={tx.id}>
+                            <td className="py-3.5 pl-3 pr-4 font-mono-tabular text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
                               {tx.date}
                             </td>
                             <td className="py-3.5 px-4">
@@ -3466,12 +3468,12 @@ export default function App() {
                             <td className="py-3.5 px-4 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                               {formatMyanmarLakhs(tx.amountMmk)}
                             </td>
-                            <td className="py-3.5 pl-4 text-right whitespace-nowrap">
+                            <td className="py-3.5 pl-4 pr-3 text-right whitespace-nowrap">
                               <div className="inline-flex items-center gap-1.5">
                                 <button
                                   type="button"
                                   onClick={() => openEditTransactionModal(tx)}
-                                  className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
+                                  className="px-2.5 py-1.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
                                   <span>ပြင်မည်</span>
@@ -3479,7 +3481,7 @@ export default function App() {
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteTransaction(tx.id)}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 cursor-pointer"
+                                  className="p-1.5 rounded-xl neu-btn text-slate-500 hover:text-red-600 cursor-pointer"
                                   aria-label="Delete"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -3493,18 +3495,18 @@ export default function App() {
                   </div>
 
                   {filteredTransactions.length > visibleTableLimit && (
-                    <div className="pt-3 flex flex-wrap items-center justify-center gap-2">
+                    <div className="pt-3 flex flex-wrap items-center justify-center gap-2.5">
                       <button
                         type="button"
                         onClick={() => setVisibleTableLimit((prev) => prev + 30)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-slate-800 dark:text-slate-200 cursor-pointer"
                       >
                         နောက်ထပ် စာရင်းများ ဆက်ကြည့်မည် (ကျန် {filteredTransactions.length - visibleTableLimit} ခု)
                       </button>
                       <button
                         type="button"
                         onClick={() => setVisibleTableLimit(filteredTransactions.length)}
-                        className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                        className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold text-emerald-700 dark:text-emerald-400 cursor-pointer"
                       >
                         စာရင်းအားလုံး ပြမည် ({filteredTransactions.length} ခု)
                       </button>
@@ -3516,12 +3518,12 @@ export default function App() {
           )}
 
           {/* =========================================================
-              TAB 3: စတော့ / Bitcoin (Smart Responsive Layout for Mobile, Tablet & Web)
+              TAB 3: စတော့ / Bitcoin (Premium Neumorphism Portfolio)
              ========================================================= */}
           {activeSection === 'portfolio' && (
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 space-y-5">
+            <div className="neu-card rounded-3xl p-4 sm:p-6 space-y-5">
               {/* Header Bar: Title + Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-300/60 dark:border-slate-800">
                 <div className="min-w-0">
                   <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
                     စတော့၊ ETF နှင့် Bitcoin ရင်းနှီးမြှုပ်နှံမှုစာရင်း
@@ -3531,12 +3533,12 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
                   <button
                     type="button"
                     onClick={handleRefreshLiveBtc}
                     disabled={isRefreshingMarket}
-                    className="min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    className="min-h-[38px] px-3.5 py-1.5 rounded-2xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isRefreshingMarket ? 'animate-spin' : ''}`} />
                     <span>BTC ပေါက်ဈေးရယူမည်</span>
@@ -3550,7 +3552,7 @@ export default function App() {
                       setModalMode('holding');
                       setModalOpen(true);
                     }}
-                    className="min-h-[38px] px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-xs font-semibold text-white flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                    className="min-h-[38px] px-4 py-1.5 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     <Plus className="w-4 h-4 shrink-0" />
                     <span>အသစ်ထည့်မည်</span>
@@ -3559,9 +3561,9 @@ export default function App() {
               </div>
 
               {/* 3-Card Portfolio Summary Strip (Market Value, Total Cost, Total Profit/Loss) */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 rounded-xl p-3.5 min-w-0">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="neu-card-sm rounded-2xl p-4 min-w-0">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     စုစုပေါင်း လက်ရှိတန်ဖိုး
                   </div>
                   <div className="mt-1 font-mono-tabular text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
@@ -3572,8 +3574,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 rounded-xl p-3.5 min-w-0">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <div className="neu-card-sm rounded-2xl p-4 min-w-0">
+                  <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     စုစုပေါင်း ရင်းနှီးမြှုပ်နှံငွေ (ဝယ်ရင်း)
                   </div>
                   <div className="mt-1 font-mono-tabular text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
@@ -3584,8 +3586,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 rounded-xl p-3.5 min-w-0">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                <div className="neu-emerald-well rounded-2xl p-4 min-w-0">
+                  <div className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                     စုစုပေါင်း အမြတ် / အရှုံး
                   </div>
                   <div
@@ -3617,7 +3619,7 @@ export default function App() {
 
               {/* Filter Tabs by Asset Type */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-950 rounded-xl overflow-x-auto max-w-full">
+                <div className="flex items-center gap-1.5 p-1.5 neu-inset rounded-2xl overflow-x-auto max-w-full">
                   {(
                     [
                       { id: 'all', label: 'အားလုံး' },
@@ -3630,9 +3632,9 @@ export default function App() {
                       key={tab.id}
                       type="button"
                       onClick={() => setHoldingFilter(tab.id)}
-                      className={`min-h-[34px] px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                      className={`min-h-[34px] px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                         holdingFilter === tab.id
-                          ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs'
+                          ? 'neu-segment-active text-emerald-700 dark:text-emerald-400 font-bold'
                           : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                       }`}
                     >
@@ -3647,15 +3649,15 @@ export default function App() {
               </div>
 
               {filteredHoldings.length === 0 ? (
-                <div className="py-10 text-center space-y-2 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                <div className="py-10 text-center space-y-2 neu-inset rounded-2xl">
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     ရွေးချယ်ထားသော အမျိုးအစားတွင် စာရင်း မရှိသေးပါ။
                   </p>
                 </div>
               ) : (
                 <>
-                  {/* Mobile & Tablet View (< 1024px): Spacious 2-Row Card Layout with Zero Text Overlap */}
-                  <div className="divide-y divide-slate-200/70 dark:divide-slate-800 lg:hidden">
+                  {/* Mobile & Tablet View (< 1024px): Spacious 2-Row Card Layout */}
+                  <div className="space-y-3.5 lg:hidden">
                     {filteredHoldings.map((h) => {
                       const valSgd = h.quantity * h.currentPriceSgd;
                       const costSgd = h.quantity * h.avgBuyPriceSgd;
@@ -3671,7 +3673,7 @@ export default function App() {
                           : 'Stock';
 
                       return (
-                        <div key={h.id} className="py-4 first:pt-1 last:pb-1 space-y-3">
+                        <div key={h.id} className="neu-card-sm rounded-2xl p-4 space-y-3">
                           {/* Top Row: Asset Identity on Left + Edit/Delete Actions on Right */}
                           <div className="flex items-start justify-between gap-3">
                             <div
@@ -3707,7 +3709,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => openEditHoldingModal(h)}
-                                className="h-8 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
+                                className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer"
                                 aria-label="Edit"
                               >
                                 <Edit3 className="w-3.5 h-3.5 shrink-0" />
@@ -3717,7 +3719,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteHolding(h.id)}
-                                className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-red-500 shrink-0 cursor-pointer"
+                                className="h-8 w-8 rounded-xl neu-btn flex items-center justify-center text-slate-500 hover:text-red-500 shrink-0 cursor-pointer"
                                 aria-label="Delete"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -3726,7 +3728,7 @@ export default function App() {
                           </div>
 
                           {/* Bottom Row: 2x2 (Mobile) / 4-Col (Tablet) Structured Metric Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50/90 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/80 rounded-xl p-3">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 neu-inset-sm rounded-xl p-3">
                             <div className="min-w-0">
                               <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
                                 အရေအတွက် / ဝယ်ဈေး
@@ -3796,20 +3798,20 @@ export default function App() {
                   </div>
 
                   {/* Web View (>= 1024px): Clean 7-Column Table */}
-                  <div className="hidden lg:block overflow-x-auto">
+                  <div className="hidden lg:block overflow-x-auto neu-inset rounded-2xl p-2">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
-                          <th className="py-3 pr-4 font-medium whitespace-nowrap">အမည် / ပလက်ဖောင်း</th>
+                        <tr className="border-b border-slate-300/60 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
+                          <th className="py-3 pl-3 pr-4 font-medium whitespace-nowrap">အမည် / ပလက်ဖောင်း</th>
                           <th className="py-3 px-3 font-medium text-right whitespace-nowrap">အရေအတွက်</th>
                           <th className="py-3 px-3 font-medium text-right whitespace-nowrap">ပျမ်းမျှဝယ်ဈေး</th>
                           <th className="py-3 px-3 font-medium text-right whitespace-nowrap">လက်ရှိဈေး (SGD)</th>
                           <th className="py-3 px-3 font-medium text-right whitespace-nowrap">စုစုပေါင်းတန်ဖိုး</th>
                           <th className="py-3 px-3 font-medium text-right whitespace-nowrap">အမြတ် / အရှုံး</th>
-                          <th className="py-3 pl-4 font-medium text-right whitespace-nowrap">ပြင်ဆင် / ဖျက်ရန်</th>
+                          <th className="py-3 pl-4 pr-3 font-medium text-right whitespace-nowrap">ပြင်ဆင် / ဖျက်ရန်</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                      <tbody className="divide-y divide-slate-300/50 dark:divide-slate-800 text-sm">
                         {filteredHoldings.map((h) => {
                           const costSgd = h.quantity * h.avgBuyPriceSgd;
                           const valSgd = h.quantity * h.currentPriceSgd;
@@ -3825,8 +3827,8 @@ export default function App() {
                               : 'Stock';
 
                           return (
-                            <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                              <td className="py-3.5 pr-4">
+                            <tr key={h.id}>
+                              <td className="py-3.5 pl-3 pr-4">
                                 <div className="flex items-baseline gap-2">
                                   <span className="font-mono-tabular font-bold text-slate-900 dark:text-slate-100">
                                     {h.symbol}
@@ -3875,12 +3877,12 @@ export default function App() {
                                   {formatMyanmarLakhs(Math.abs(pnlMmk))}
                                 </div>
                               </td>
-                              <td className="py-3.5 pl-4 text-right whitespace-nowrap">
+                              <td className="py-3.5 pl-4 pr-3 text-right whitespace-nowrap">
                                 <div className="inline-flex items-center gap-1.5">
                                   <button
                                     type="button"
                                     onClick={() => openEditHoldingModal(h)}
-                                    className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
+                                    className="px-2.5 py-1.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 inline-flex items-center gap-1 cursor-pointer"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     <span>ပြင်မည်</span>
@@ -3888,7 +3890,7 @@ export default function App() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteHolding(h.id)}
-                                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 cursor-pointer"
+                                    className="p-1.5 rounded-xl neu-btn text-slate-500 hover:text-red-600 cursor-pointer"
                                     aria-label="Delete"
                                   >
                                     <Trash2 className="w-4 h-4" />
@@ -3907,29 +3909,31 @@ export default function App() {
           )}
 
           {/* =========================================================
-              TAB 4: ဆက်တင် (Manual Backup & Restore + Biometric Lock + Cloud Sync)
+              TAB 4: ဆက်တင် (Premium Neumorphism Settings & Backup)
              ========================================================= */}
           {activeSection === 'settings' && (
             <div className="space-y-6">
               {/* Card 0: Install App on Phone with Custom Icon */}
-              <div className="bg-white dark:bg-slate-900 border border-emerald-200/90 dark:border-emerald-800/80 rounded-2xl p-5 sm:p-6 space-y-4">
+              <div className="neu-card rounded-3xl p-5 sm:p-6 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <span className="w-14 h-14 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-1 shrink-0 inline-flex items-center justify-center shadow-sm">
-                      <img
-                        src="./assets/aistudio/my_walet_40feb1c8.png"
-                        onError={(e) => {
-                          const img = e.currentTarget;
-                          if (!img.dataset.fallback) {
-                            img.dataset.fallback = '1';
-                            img.src =
-                              './public/assets/aistudio/my_walet_40feb1c8.png';
-                          }
-                        }}
-                        alt="ဥစ္စာပွား App Icon"
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-contain object-center"
-                      />
+                    <span className="w-16 h-16 aspect-square rounded-2xl neu-icon-frame p-1.5 shrink-0 inline-flex items-center justify-center">
+                      <span className="w-full h-full rounded-xl overflow-hidden bg-[#073b4c] p-0.5 inline-flex items-center justify-center">
+                        <img
+                          src="./assets/aistudio/my_walet_40feb1c8.png"
+                          onError={(e) => {
+                            const img = e.currentTarget;
+                            if (!img.dataset.fallback) {
+                              img.dataset.fallback = '1';
+                              img.src =
+                                './public/assets/aistudio/my_walet_40feb1c8.png';
+                            }
+                          }}
+                          alt="ဥစ္စာပွား App Icon"
+                          referrerPolicy="no-referrer"
+                          className="w-full h-full object-contain object-center"
+                        />
+                      </span>
                     </span>
                     <div className="min-w-0">
                       <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
@@ -3947,7 +3951,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={handleInstallAppClick}
-                      className="min-h-[42px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-xs"
+                      className="min-h-[42px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold inline-flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Smartphone className="w-4 h-4 shrink-0" />
                       <span>
@@ -3961,7 +3965,7 @@ export default function App() {
               </div>
 
               {/* Card 1: Manual Backup & Restore */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4">
+              <div className="neu-card rounded-3xl p-6 space-y-4">
                 <div>
                   <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                     Manual Backup & Restore (ဖိုင်ဖြင့် သိမ်းဆည်းခြင်း နှင့် ပြန်တင်ခြင်း)
@@ -3971,19 +3975,19 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
                   {/* Download JSON Backup */}
                   <button
                     type="button"
                     onClick={handleExportJsonBackup}
-                    className="min-h-[46px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="min-h-[46px] px-4 py-2.5 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Download className="w-4 h-4 shrink-0" />
                     <span>Backup (.json) သိမ်းမည်</span>
                   </button>
 
                   {/* Restore JSON Backup */}
-                  <label className="min-h-[46px] px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer">
+                  <label className="min-h-[46px] px-4 py-2.5 rounded-2xl neu-btn text-slate-800 dark:text-slate-100 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer">
                     <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>
                       {isRestoringBackup ? 'ပြန်တင်နေသည်...' : 'Restore (ဖိုင်ပြန်တင်မည်)'}
@@ -4001,7 +4005,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={handleExportCsv}
-                    className="min-h-[46px] px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                    className="min-h-[46px] px-4 py-2.5 rounded-2xl neu-btn text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <span>Excel (.csv) ထုတ်မည်</span>
@@ -4010,9 +4014,9 @@ export default function App() {
               </div>
 
               {/* Card 2: Biometric, PIN & Cloud Sync */}
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6">
+              <div className="neu-card rounded-3xl p-6 space-y-6">
                 {/* Row 1: Biometric Lock */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-300/60 dark:border-slate-800">
                   <div>
                     <div className="text-sm font-bold">Biometric သော့ခတ်စနစ် (TouchID / FaceID)</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -4021,11 +4025,11 @@ export default function App() {
                         : 'Biometric သို့မဟုတ် PIN ဖြင့် သော့ခတ်နိုင်ပါသည်'}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <button
                       type="button"
                       onClick={handleRegisterPasskey}
-                      className="min-h-[40px] px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                      className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                     >
                       <Fingerprint className="w-4 h-4" />
                       <span>Biometric ချိတ်မည်</span>
@@ -4033,7 +4037,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setIsVaultLocked(true)}
-                      className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold cursor-pointer"
+                      className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold cursor-pointer"
                     >
                       ယခု သော့ခတ်မည်
                     </button>
@@ -4043,12 +4047,12 @@ export default function App() {
                 {/* Row 2: PIN Setting */}
                 <form
                   onSubmit={handleSaveSecuritySettings}
-                  className="space-y-3 pb-5 border-b border-slate-100 dark:border-slate-800"
+                  className="space-y-3 pb-5 border-b border-slate-300/60 dark:border-slate-800"
                 >
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
                       <div>
-                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                           လက်ရှိ PIN နံပါတ်
                         </label>
                         <input
@@ -4061,11 +4065,11 @@ export default function App() {
                             setSecurityFormError(null);
                             setCurrentPinDraft(e.target.value.replace(/[^0-9]/g, ''));
                           }}
-                          className="w-32 min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 font-mono-tabular text-sm"
+                          className="w-32 min-h-[40px] neu-input rounded-xl px-3 font-mono-tabular text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                           PIN အသစ် (၄-၆ လုံး)
                         </label>
                         <input
@@ -4078,17 +4082,17 @@ export default function App() {
                             setSecurityFormError(null);
                             setPinDraft(e.target.value.replace(/[^0-9]/g, ''));
                           }}
-                          className="w-32 min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 font-mono-tabular text-sm"
+                          className="w-32 min-h-[40px] neu-input rounded-xl px-3 font-mono-tabular text-sm"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
                           Auto-Lock အချိန်
                         </label>
                         <select
                           value={autoLockDraft}
                           onChange={(e) => setAutoLockDraft(e.target.value)}
-                          className="min-h-[40px] bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 text-sm"
+                          className="min-h-[40px] neu-input rounded-xl px-3 text-sm"
                         >
                           <option value="1">1 မိနစ်</option>
                           <option value="5">5 မိနစ်</option>
@@ -4099,7 +4103,7 @@ export default function App() {
                     </div>
                     <button
                       type="submit"
-                      className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white text-xs font-semibold cursor-pointer"
+                      className="min-h-[40px] px-5 py-2 rounded-2xl neu-btn-primary text-xs font-semibold cursor-pointer"
                     >
                       သိမ်းမည်
                     </button>
@@ -4132,7 +4136,7 @@ export default function App() {
                           setErrorBanner('အကောင့်မှ ထွက်ရာတွင် အမှားရှိနေပါသည်။');
                         }
                       }}
-                      className="min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                      className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>အကောင့်မှထွက်မည်</span>
@@ -4153,7 +4157,7 @@ export default function App() {
                           }
                         }
                       }}
-                      className="min-h-[40px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+                      className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                     >
                       <LogIn className="w-4 h-4" />
                       <span>Google ဖြင့်ချိတ်မည်</span>
@@ -4165,10 +4169,10 @@ export default function App() {
           )}
         </main>
 
-        {/* Mobile Fixed Bottom Navigation Bar */}
+        {/* Mobile Fixed Bottom Neumorphic Navigation Dock */}
         <nav
           aria-label="Mobile Navigation"
-          className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 grid grid-cols-4 items-center h-16 px-2"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-40 neu-bottom-nav grid grid-cols-4 items-center gap-1.5 h-16 px-2.5 py-1.5"
         >
           {(
             [
@@ -4184,14 +4188,14 @@ export default function App() {
                 key={id}
                 type="button"
                 onClick={() => setActiveSection(id)}
-                className={`min-h-[48px] flex flex-col items-center justify-center transition-colors cursor-pointer ${
+                className={`min-h-[48px] rounded-2xl flex flex-col items-center justify-center transition-all cursor-pointer ${
                   active
-                    ? 'text-emerald-600 dark:text-emerald-400 font-bold'
+                    ? 'neu-inset-sm text-emerald-600 dark:text-emerald-400 font-bold'
                     : 'text-slate-500 dark:text-slate-400'
                 }`}
               >
                 <Icon className="w-5 h-5" />
-                <span className="text-[11px] mt-1 whitespace-nowrap">{label}</span>
+                <span className="text-[11px] mt-0.5 whitespace-nowrap">{label}</span>
               </button>
             );
           })}
@@ -4216,25 +4220,27 @@ export default function App() {
 
         {/* Phone Home Screen Install Guide Modal */}
         {showInstallGuideModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
+            <div className="neu-card rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-5 max-h-[90vh] overflow-y-auto">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="w-12 h-12 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-0.5 shrink-0 inline-flex items-center justify-center shadow-xs">
-                    <img
-                      src="./assets/aistudio/my_walet_40feb1c8.png"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        if (!img.dataset.fallback) {
-                          img.dataset.fallback = '1';
-                          img.src =
-                            './public/assets/aistudio/my_walet_40feb1c8.png';
-                        }
-                      }}
-                      alt="ဥစ္စာပွား"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-contain object-center"
-                    />
+                  <span className="w-12 h-12 aspect-square rounded-2xl neu-icon-frame p-1 shrink-0 inline-flex items-center justify-center">
+                    <span className="w-full h-full rounded-xl overflow-hidden bg-[#073b4c] p-0.5 inline-flex items-center justify-center">
+                      <img
+                        src="./assets/aistudio/my_walet_40feb1c8.png"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          if (!img.dataset.fallback) {
+                            img.dataset.fallback = '1';
+                            img.src =
+                              './public/assets/aistudio/my_walet_40feb1c8.png';
+                          }
+                        }}
+                        alt="ဥစ္စာပွား"
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-contain object-center"
+                      />
+                    </span>
                   </span>
                   <div className="min-w-0">
                     <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
@@ -4248,7 +4254,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowInstallGuideModal(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer shrink-0"
+                  className="p-2 rounded-xl neu-btn text-slate-500 hover:text-slate-800 dark:hover:text-slate-100 cursor-pointer shrink-0"
                   aria-label="Close modal"
                 >
                   <X className="w-5 h-5" />
@@ -4256,14 +4262,14 @@ export default function App() {
               </div>
 
               {pwaInstallPrompt && (
-                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 space-y-2.5">
+                <div className="p-3.5 rounded-2xl neu-emerald-well space-y-2.5">
                   <div className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
                     တိုက်ရိုက် Install သွင်းရန် အသင့်ရှိပါသည်
                   </div>
                   <button
                     type="button"
                     onClick={handleInstallAppClick}
-                    className="w-full min-h-[42px] px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full min-h-[42px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Smartphone className="w-4 h-4 shrink-0" />
                     <span>ယခု Install သွင်းမည် (Install App)</span>
@@ -4272,7 +4278,7 @@ export default function App() {
               )}
 
               {/* Android Instructions */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+              <div className="p-4 rounded-2xl neu-inset space-y-2.5">
                 <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-400">
                   <Smartphone className="w-4 h-4 shrink-0" />
                   <span>Android ဖုန်း (Chrome Browser) တွင် သွင်းနည်း</span>
@@ -4293,7 +4299,7 @@ export default function App() {
               </div>
 
               {/* iPhone / iPad Instructions */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200/80 dark:border-slate-800 space-y-2.5">
+              <div className="p-4 rounded-2xl neu-inset space-y-2.5">
                 <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-sky-700 dark:text-sky-400">
                   <Share2 className="w-4 h-4 shrink-0" />
                   <span>iPhone / iPad (Safari Browser) တွင် သွင်းနည်း</span>
@@ -4319,7 +4325,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowInstallGuideModal(false)}
-                className="w-full min-h-[42px] px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-semibold cursor-pointer"
+                className="w-full min-h-[42px] px-4 py-2 rounded-2xl neu-btn-primary text-xs font-semibold cursor-pointer"
               >
                 နားလည်ပါပြီ (ပိတ်မည်)
               </button>

@@ -199,12 +199,12 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
 
   return (
     <div className={isDark ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between p-4 sm:p-6 select-none transition-colors">
+      <div className="min-h-screen neu-app-bg text-slate-800 dark:text-slate-100 flex flex-col justify-between p-4 sm:p-6 select-none transition-colors">
         <div className="max-w-md w-full mx-auto flex justify-end">
           <button
             type="button"
             onClick={onToggleTheme}
-            className="min-h-[40px] px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"
+            className="min-h-[40px] px-3.5 py-1.5 rounded-2xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer"
           >
             {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             <span>{isDark ? 'Day Mode' : 'Night Mode'}</span>
@@ -212,25 +212,27 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
         </div>
 
         <div className="max-w-md w-full mx-auto my-auto">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xs">
+          <div className="neu-card rounded-3xl p-6 sm:p-8">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 aspect-square rounded-2xl overflow-hidden bg-[#073b4c] p-0.5 shadow-sm mx-auto mb-3 flex items-center justify-center">
-                <img
-                  src="./assets/aistudio/my_walet_40feb1c8.png"
-                  onError={(e) => {
-                    const img = e.currentTarget;
-                    if (!img.dataset.fallback) {
-                      img.dataset.fallback = '1';
-                      img.src =
-                        './public/assets/aistudio/my_walet_40feb1c8.png';
-                    }
-                  }}
-                  alt="ဥစ္စာပွား (Uchsar Pwar)"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-contain object-center"
-                />
+              <div className="w-20 h-20 aspect-square rounded-3xl neu-icon-frame p-1.5 mx-auto mb-3.5 flex items-center justify-center">
+                <div className="w-full h-full rounded-2xl overflow-hidden bg-[#073b4c] p-0.5 flex items-center justify-center">
+                  <img
+                    src="./assets/aistudio/my_walet_40feb1c8.png"
+                    onError={(e) => {
+                      const img = e.currentTarget;
+                      if (!img.dataset.fallback) {
+                        img.dataset.fallback = '1';
+                        img.src =
+                          './public/assets/aistudio/my_walet_40feb1c8.png';
+                      }
+                    }}
+                    alt="ဥစ္စာပွား (Uchsar Pwar)"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-contain object-center"
+                  />
+                </div>
               </div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 ဥစ္စာပွား (Uchsar Pwar)
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -245,7 +247,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
                 type="button"
                 onClick={handleBiometricVerify}
                 disabled={isScanning}
-                className="w-full min-h-[48px] py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm flex items-center justify-center gap-2.5 transition-colors cursor-pointer disabled:opacity-60 mb-5"
+                className="w-full min-h-[48px] py-3 px-4 rounded-2xl neu-btn-primary font-semibold text-sm flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-60 mb-5"
               >
                 <Fingerprint className={`w-5 h-5 ${isScanning ? 'animate-pulse' : ''}`} />
                 <span className="whitespace-nowrap">
@@ -255,14 +257,14 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
             )}
 
             {statusMessage && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-center gap-2">
+              <div className="mb-4 p-3 rounded-2xl neu-emerald-well text-emerald-800 dark:text-emerald-300 text-xs flex items-center justify-center gap-2">
                 <ShieldCheck className="w-4 h-4 shrink-0" />
                 <span>{statusMessage}</span>
               </div>
             )}
 
             {isLockedOut ? (
-              <div className="mb-4 p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800/80 text-amber-800 dark:text-amber-200 text-xs flex flex-col items-center justify-center gap-1.5 text-center">
+              <div className="mb-4 p-3.5 rounded-2xl neu-inset text-amber-800 dark:text-amber-200 text-xs flex flex-col items-center justify-center gap-1.5 text-center">
                 <div className="flex items-center gap-1.5 font-bold text-amber-900 dark:text-amber-100">
                   <Clock className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 animate-pulse" />
                   <span>ခေတ္တ စောင့်ဆိုင်းပေးပါ ({formatCountdown(remainingSeconds)})</span>
@@ -273,28 +275,28 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
               </div>
             ) : (
               errorMessage && (
-                <div className="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-center justify-center gap-2 text-center">
+                <div className="mb-4 p-3 rounded-2xl neu-inset text-red-600 dark:text-red-300 text-xs flex items-center justify-center gap-2 text-center">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )
             )}
 
-            <div className="text-center mb-4">
-              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-slate-400" />
+            <div className="text-center mb-5">
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2.5 flex items-center justify-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>လုံခြုံရေး PIN နံပါတ် ရိုက်ထည့်ပါ</span>
               </div>
-              <div className="flex items-center justify-center gap-3 h-8">
+              <div className="inline-flex items-center justify-center gap-3.5 px-6 py-3 rounded-2xl neu-inset">
                 {Array.from({ length: expectedPinLength }).map((_, idx) => {
                   const filled = idx < enteredPin.length;
                   return (
                     <div
                       key={idx}
-                      className={`w-3.5 h-3.5 rounded-full transition-all ${
+                      className={`w-4 h-4 rounded-full transition-all duration-150 ${
                         filled
-                          ? 'bg-emerald-600 dark:bg-emerald-400 scale-110'
-                          : 'bg-slate-200 dark:bg-slate-800'
+                          ? 'bg-emerald-500 dark:bg-emerald-400 scale-110 shadow-[0_0_10px_rgba(16,185,129,0.65)]'
+                          : 'neu-inset-sm'
                       }`}
                     />
                   );
@@ -302,14 +304,14 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-3.5">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
                 <button
                   key={digit}
                   type="button"
                   disabled={isLockedOut}
                   onClick={() => handleKeypadDigit(digit)}
-                  className="min-h-[52px] rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 font-mono-tabular text-lg font-semibold text-slate-800 dark:text-slate-100 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="min-h-[54px] rounded-2xl neu-btn font-mono-tabular text-lg font-bold text-slate-800 dark:text-slate-100 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {digit}
                 </button>
@@ -318,7 +320,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
                 type="button"
                 disabled={isLockedOut || enteredPin.length === 0}
                 onClick={() => setEnteredPin('')}
-                className="min-h-[52px] rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 text-xs font-medium text-slate-500 dark:text-slate-400 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="min-h-[54px] rounded-2xl neu-btn text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Clear
               </button>
@@ -326,7 +328,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
                 type="button"
                 disabled={isLockedOut}
                 onClick={() => handleKeypadDigit('0')}
-                className="min-h-[52px] rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 font-mono-tabular text-lg font-semibold text-slate-800 dark:text-slate-100 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="min-h-[54px] rounded-2xl neu-btn font-mono-tabular text-lg font-bold text-slate-800 dark:text-slate-100 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 0
               </button>
@@ -334,7 +336,7 @@ export const BiometricLockScreen: React.FC<BiometricLockScreenProps> = ({
                 type="button"
                 disabled={isLockedOut || enteredPin.length === 0}
                 onClick={() => setEnteredPin((prev) => prev.slice(0, -1))}
-                className="min-h-[52px] rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="min-h-[54px] rounded-2xl neu-btn flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 aria-label="Backspace"
               >
                 <Delete className="w-5 h-5" />
