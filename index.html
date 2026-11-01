@@ -14,9 +14,225 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="ဥစ္စာပွား" />
-    <link id="app-manifest" rel="manifest" href="./manifest.json?v=4" />
-    <link id="app-favicon" rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=4" />
-    <link id="app-touch-icon" rel="apple-touch-icon" sizes="512x512" href="./icon-512.png?v=4" />
+    <link rel="manifest" href="./manifest.json" />
+    <link id="app-favicon" rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=6" />
+    <link id="app-touch-icon" rel="apple-touch-icon" sizes="512x512" href="./icon-512.png?v=6" />
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/": "https://esm.sh/react@18.3.1/",
+          "react-dom": "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
+          "lucide-react": "https://esm.sh/lucide-react@0.477.0?deps=react@18.3.1",
+          "recharts": "https://esm.sh/recharts@2.15.1?deps=react@18.3.1,react-dom@18.3.1",
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <style id="merlion-neumorphism-css">
+      :root {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        --neu-bg: #e6ecf5;
+        --neu-surface: #eaf0f8;
+        --neu-surface-hi: #f2f6fc;
+        --neu-shadow-dark: #c2cee0;
+        --neu-shadow-light: #ffffff;
+        --neu-border-light: rgba(255, 255, 255, 0.78);
+        --neu-border-dark: rgba(194, 206, 224, 0.45);
+      }
+
+      .dark {
+        --neu-bg: #161b26;
+        --neu-surface: #1b2230;
+        --neu-surface-hi: #21293a;
+        --neu-shadow-dark: #0d1017;
+        --neu-shadow-light: #263044;
+        --neu-border-light: rgba(255, 255, 255, 0.06);
+        --neu-border-dark: rgba(0, 0, 0, 0.45);
+      }
+
+      body {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        margin: 0;
+        padding: 0;
+        background-color: var(--neu-bg);
+      }
+
+      .font-mono-tabular {
+        font-family: 'JetBrains Mono', monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .neu-app-bg {
+        background: radial-gradient(circle at 15% 10%, var(--neu-surface-hi) 0%, var(--neu-bg) 70%);
+      }
+
+      .neu-header {
+        background: color-mix(in srgb, var(--neu-surface) 92%, transparent);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 6px 18px var(--neu-shadow-dark);
+        border-bottom: 1px solid var(--neu-border-light);
+      }
+
+      .neu-bottom-nav {
+        background: color-mix(in srgb, var(--neu-surface) 95%, transparent);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 -6px 18px var(--neu-shadow-dark);
+        border-top: 1px solid var(--neu-border-light);
+      }
+
+      .neu-card {
+        background: linear-gradient(145deg, var(--neu-surface-hi), var(--neu-surface));
+        box-shadow:
+          10px 10px 22px var(--neu-shadow-dark),
+          -10px -10px 22px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-light);
+      }
+
+      .neu-card-sm {
+        background: linear-gradient(145deg, var(--neu-surface-hi), var(--neu-surface));
+        box-shadow:
+          5px 5px 12px var(--neu-shadow-dark),
+          -5px -5px 12px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-light);
+        transition: transform 0.16s ease, box-shadow 0.16s ease;
+      }
+
+      .neu-card-sm-interactive:hover {
+        transform: translateY(-1px);
+      }
+
+      .neu-card-sm-interactive:active {
+        transform: translateY(0);
+        box-shadow:
+          inset 3px 3px 7px var(--neu-shadow-dark),
+          inset -3px -3px 7px var(--neu-shadow-light);
+      }
+
+      .neu-inset {
+        background: var(--neu-bg);
+        box-shadow:
+          inset 5px 5px 11px var(--neu-shadow-dark),
+          inset -5px -5px 11px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-dark);
+      }
+
+      .neu-inset-sm {
+        background: var(--neu-bg);
+        box-shadow:
+          inset 3px 3px 7px var(--neu-shadow-dark),
+          inset -3px -3px 7px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-dark);
+      }
+
+      .neu-emerald-well {
+        background: linear-gradient(145deg, rgba(16, 185, 129, 0.11), rgba(5, 150, 105, 0.04));
+        box-shadow:
+          inset 4px 4px 10px var(--neu-shadow-dark),
+          inset -4px -4px 10px var(--neu-shadow-light);
+        border: 1px solid rgba(16, 185, 129, 0.28);
+      }
+
+      .neu-emerald-card {
+        background: linear-gradient(145deg, rgba(16, 185, 129, 0.14), rgba(5, 150, 105, 0.05));
+        box-shadow:
+          5px 5px 12px var(--neu-shadow-dark),
+          -5px -5px 12px var(--neu-shadow-light);
+        border: 1px solid rgba(16, 185, 129, 0.35);
+      }
+
+      .neu-input {
+        background: var(--neu-bg);
+        box-shadow:
+          inset 4px 4px 8px var(--neu-shadow-dark),
+          inset -4px -4px 8px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-dark);
+        transition: box-shadow 0.18s ease, border-color 0.18s ease;
+      }
+
+      .neu-input:focus {
+        outline: none;
+        border-color: rgba(16, 185, 129, 0.65);
+        box-shadow:
+          inset 4px 4px 8px var(--neu-shadow-dark),
+          inset -4px -4px 8px var(--neu-shadow-light),
+          0 0 0 2px rgba(16, 185, 129, 0.18);
+      }
+
+      .neu-btn {
+        background: linear-gradient(145deg, var(--neu-surface-hi), var(--neu-surface));
+        box-shadow:
+          4px 4px 10px var(--neu-shadow-dark),
+          -4px -4px 10px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-light);
+        transition: all 0.15s ease;
+      }
+
+      .neu-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+      }
+
+      .neu-btn:active:not(:disabled),
+      .neu-btn-pressed {
+        transform: translateY(0);
+        background: var(--neu-bg);
+        box-shadow:
+          inset 3px 3px 7px var(--neu-shadow-dark),
+          inset -3px -3px 7px var(--neu-shadow-light);
+      }
+
+      .neu-btn-primary {
+        background: linear-gradient(145deg, #10b981, #059669);
+        color: #ffffff;
+        box-shadow:
+          5px 5px 12px var(--neu-shadow-dark),
+          -4px -4px 10px var(--neu-shadow-light),
+          inset 1px 1px 1px rgba(255, 255, 255, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.15s ease;
+      }
+
+      .neu-btn-primary:hover:not(:disabled) {
+        background: linear-gradient(145deg, #0ea572, #047857);
+        transform: translateY(-1px);
+      }
+
+      .neu-btn-primary:active:not(:disabled) {
+        transform: translateY(0);
+        box-shadow:
+          inset 3px 3px 7px rgba(0, 0, 0, 0.35),
+          inset -2px -2px 5px rgba(255, 255, 255, 0.15);
+      }
+
+      .neu-segment-active {
+        background: linear-gradient(145deg, var(--neu-surface-hi), var(--neu-surface));
+        box-shadow:
+          3px 3px 7px var(--neu-shadow-dark),
+          -3px -3px 7px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-light);
+      }
+
+      .neu-icon-frame {
+        background: linear-gradient(145deg, var(--neu-surface-hi), var(--neu-surface));
+        box-shadow:
+          4px 4px 9px var(--neu-shadow-dark),
+          -4px -4px 9px var(--neu-shadow-light);
+        border: 1px solid var(--neu-border-light);
+      }
+    </style>
+    <script id="gh-pages-boot-flag"></script>
     <script>
       window.__deferredPwaPrompt = null;
       window.addEventListener('beforeinstallprompt', function (e) {
@@ -25,6 +241,20 @@
         window.dispatchEvent(new CustomEvent('uchsar-pwa-prompt-ready'));
       });
       (function () {
+        var CURRENT_CACHE = 'uchsar-pwar-pwa-v6';
+        if ('caches' in window) {
+          caches
+            .keys()
+            .then(function (keys) {
+              keys.forEach(function (key) {
+                if (key !== CURRENT_CACHE) {
+                  caches.delete(key);
+                }
+              });
+            })
+            .catch(function () {});
+        }
+
         var primaryIcon = './assets/aistudio/my_walet_40feb1c8.png';
         var fallbackIcon = './public/assets/aistudio/my_walet_40feb1c8.png';
 
@@ -69,45 +299,43 @@
 
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', function () {
-            navigator.serviceWorker.register('./sw.js?v=5', { scope: './' }).catch(function () {});
+            navigator.serviceWorker
+              .register('./sw.js?v=6', { scope: './', updateViaCache: 'none' })
+              .then(function (reg) {
+                reg.update().catch(function () {});
+              })
+              .catch(function () {});
           });
         }
       })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-    />
-    <script type="importmap">
-      {
-        "imports": {
-          "react": "https://esm.sh/react@18.3.1",
-          "react/": "https://esm.sh/react@18.3.1/",
-          "react-dom": "https://esm.sh/react-dom@18.3.1?deps=react@18.3.1",
-          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client?deps=react@18.3.1",
-          "lucide-react": "https://esm.sh/lucide-react@0.477.0?deps=react@18.3.1",
-          "recharts": "https://esm.sh/recharts@2.15.1?deps=react@18.3.1,react-dom@18.3.1",
-          "firebase/app": "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js",
-          "firebase/auth": "https://www.gstatic.com/firebasejs/11.4.0/firebase-auth.js",
-          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"
-        }
-      }
-    </script>
     <script>
       window.__bootGitHubPagesSource = async function () {
-        if (window.__UCHSAR_PWAR_MOUNTED__ || window.__UCHSAR_PWAR_BOOTING__) return;
+        if (
+          window.__UCHSAR_PWAR_MOUNTED__ ||
+          window.__UCHSAR_PWAR_BOOTING__ ||
+          window.__IS_VITE_DIST_BUILD__
+        ) {
+          return;
+        }
         window.__UCHSAR_PWAR_BOOTING__ = true;
 
-        function loadScript(src) {
+        function loadScript(src, fallbackSrc) {
           return new Promise(function (resolve, reject) {
             var s = document.createElement('script');
             s.src = src;
             s.onload = resolve;
-            s.onerror = reject;
+            s.onerror = function () {
+              if (fallbackSrc) {
+                var s2 = document.createElement('script');
+                s2.src = fallbackSrc;
+                s2.onload = resolve;
+                s2.onerror = reject;
+                document.head.appendChild(s2);
+              } else {
+                reject(new Error('Failed to load script: ' + src));
+              }
+            };
             document.head.appendChild(s);
           });
         }
@@ -119,24 +347,45 @@
         var rootLoading = document.getElementById('root');
         if (rootLoading && !rootLoading.innerHTML.trim()) {
           rootLoading.innerHTML =
-            '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#059669;font-size:14px;font-weight:600;">ဥစ္စာပွား (Uchsar Pwar) ဖွင့်နေပါသည်...</div>';
+            '<div class="neu-app-bg" style="min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;color:#059669;font-size:14px;font-weight:700;">ဥစ္စာပွား (Uchsar Pwar) ဖွင့်နေပါသည်...</div>';
         }
 
         try {
+          var baseNeuCssEl = document.getElementById('merlion-neumorphism-css');
+          var baseNeuCss = baseNeuCssEl ? baseNeuCssEl.textContent || '' : '';
+
           var twStyle = document.createElement('style');
           twStyle.setAttribute('type', 'text/tailwindcss');
           twStyle.textContent =
-            '@import "tailwindcss";\n@custom-variant dark (&:where(.dark, .dark *));\n@layer base { :root, body { font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif; -webkit-font-smoothing: antialiased; margin: 0; padding: 0; } .font-mono-tabular { font-family: "JetBrains Mono", monospace; font-variant-numeric: tabular-nums; } }';
+            '@import "tailwindcss";\n@custom-variant dark (&:where(.dark, .dark *));\n' +
+            baseNeuCss;
           document.head.appendChild(twStyle);
 
           await Promise.all([
-            loadScript('https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4'),
-            loadScript('https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.9/babel.min.js'),
+            loadScript(
+              'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
+              'https://unpkg.com/@tailwindcss/browser@4'
+            ).catch(function () {}),
+            loadScript(
+              'https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.9/babel.min.js',
+              'https://unpkg.com/@babel/standalone@7.26.9/babel.min.js'
+            ),
           ]);
 
           async function fetchText(relPath) {
-            var res = await fetch(relPath);
-            if (!res.ok) throw new Error('Failed to load ' + relPath);
+            var bustUrl = relPath + (relPath.indexOf('?') === -1 ? '?v=6' : '&v=6');
+            var res = null;
+            try {
+              res = await fetch(bustUrl, { cache: 'no-cache' });
+            } catch (e) {
+              res = null;
+            }
+            if (!res || !res.ok) {
+              res = await fetch(relPath);
+            }
+            if (!res || !res.ok) {
+              throw new Error('Failed to load ' + relPath);
+            }
             return await res.text();
           }
 
@@ -248,22 +497,25 @@
       onerror="window.__bootGitHubPagesSource && window.__bootGitHubPagesSource()"
     ></script>
     <script>
-      var hasViteBundle = !!document.querySelector('script[src*="./assets/app.js"]');
-      if (window.location.hostname.endsWith('github.io') && !hasViteBundle) {
-        window.__bootGitHubPagesSource();
-      } else {
-        window.addEventListener('load', function () {
-          setTimeout(function () {
-            if (!window.__UCHSAR_PWAR_MOUNTED__) {
-              window.__bootGitHubPagesSource();
-            }
-          }, 800);
-        });
-      }
+      (function () {
+        var hasViteBundle =
+          !!window.__IS_VITE_DIST_BUILD__ ||
+          !!document.querySelector('script[src*="./assets/app"]');
+        if (hasViteBundle) {
+          return;
+        }
+        if (window.location.hostname.endsWith('github.io')) {
+          window.__bootGitHubPagesSource();
+        } else {
+          window.addEventListener('load', function () {
+            setTimeout(function () {
+              if (!window.__UCHSAR_PWAR_MOUNTED__ && !window.__IS_VITE_DIST_BUILD__) {
+                window.__bootGitHubPagesSource();
+              }
+            }, 1200);
+          });
+        }
+      })();
     </script>
   </body>
 </html>
-
-
-
-

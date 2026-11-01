@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uchsar-pwar-pwa-v5';
+const CACHE_NAME = 'uchsar-pwar-pwa-v6';
 
 const CORE_LOCAL_ASSETS = [
   './',
@@ -6,6 +6,7 @@ const CORE_LOCAL_ASSETS = [
   './manifest.json',
   './firebase-applet-config.json',
   './assets/aistudio/my_walet_40feb1c8.png',
+  './src/index.css',
   './src/main.tsx',
   './src/App.tsx',
   './src/types.ts',
@@ -34,7 +35,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(async (cache) => {
-      // Pre-cache local assets individually so a missing optional path never aborts install
       await Promise.allSettled(
         CORE_LOCAL_ASSETS.map(async (assetUrl) => {
           try {
@@ -47,7 +47,6 @@ self.addEventListener('install', (event) => {
           }
         })
       );
-      // Pre-cache CDN assets for offline GitHub Pages / standalone execution
       await Promise.allSettled(
         CORE_CDN_ASSETS.map(async (cdnUrl) => {
           try {
@@ -157,6 +156,7 @@ function isImmutableCdnAsset(url) {
   return (
     url.hostname.includes('esm.sh') ||
     url.hostname.includes('cdn.jsdelivr.net') ||
+    url.hostname.includes('unpkg.com') ||
     url.hostname.includes('fonts.gstatic.com') ||
     url.hostname.includes('fonts.googleapis.com') ||
     (url.hostname.includes('www.gstatic.com') && url.pathname.includes('/firebasejs/'))
@@ -203,11 +203,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // For same-origin app files & navigation: try fast network, fall back immediately to cache when offline
+  // For same-origin app files & navigation: bypass stale HTTP cache online, fall back immediately to cache when offline
   event.respondWith(
     (async () => {
       try {
-        const response = await fetch(event.request);
+        const response = await fetch(event.request, { cache: 'no-cache' });
         if (
           response &&
           response.status === 404 &&
@@ -232,7 +232,15 @@ self.addEventListener('fetch', (event) => {
             .open(CACHE_NAME)
             .then((cache) => cache.put(event.request, copy))
             .catch(() => {});
+          return response;
         }
+
+        // If server returned 404 for a cached local asset, serve from cache if available
+        const cachedFallback =
+          (await caches.match(event.request)) ||
+          (await caches.match(event.request, { ignoreSearch: true }));
+        if (cachedFallback) return cachedFallback;
+
         return response;
       } catch {
         // Offline fallback: match exact request, then ignoreSearch, then app shell for navigations
