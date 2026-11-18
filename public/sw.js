@@ -1,4 +1,4 @@
-const CACHE_NAME = 'uchsar-pwar-pwa-v6';
+const CACHE_NAME = 'uchsar-pwar-pwa-v7';
 
 const CORE_LOCAL_ASSETS = [
   './',

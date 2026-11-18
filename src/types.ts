@@ -7,6 +7,7 @@ export interface VaultConfig {
   monthlySalarySgd: number;
   monthlyRentSgd: number;
   monthlySavingsTargetSgd: number;
+  lockEnabled?: boolean;
   biometricEnabled: boolean;
   passkeyId: string;
   pinCode: string;

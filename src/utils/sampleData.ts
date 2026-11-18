@@ -8,6 +8,7 @@ export const DEFAULT_VAULT_CONFIG: VaultConfig = {
   monthlySalarySgd: 5800,
   monthlyRentSgd: 1150,
   monthlySavingsTargetSgd: 1800,
+  lockEnabled: true,
   biometricEnabled: true,
   passkeyId: 'sim_bio_merlion_default_key',
   pinCode: '2026',

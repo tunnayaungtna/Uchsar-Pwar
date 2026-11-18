@@ -137,7 +137,23 @@ function formatMyanmarDateWeekday(dateStr: string): string {
 
 export default function App() {
   const [activeSection, setActiveSection] = useState<NavSection>('overview');
-  const [isVaultLocked, setIsVaultLocked] = useState<boolean>(true);
+  const [isVaultLocked, setIsVaultLocked] = useState<boolean>(() => {
+    try {
+      if (localStorage.getItem('uchsar_app_lock_enabled_v1') === 'false') {
+        return false;
+      }
+      const saved = localStorage.getItem('merlion_vault_config_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.lockEnabled === false) {
+          return false;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return true;
+  });
 
   // Day Mode / Night Mode
   const [isDark, setIsDark] = useState<boolean>(() => {
@@ -170,12 +186,29 @@ export default function App() {
   // Core Data
   const [vaultConfig, setVaultConfig] = useState<VaultConfig>(() => {
     try {
+      const explicitLockPref = localStorage.getItem('uchsar_app_lock_enabled_v1');
       const saved = localStorage.getItem('merlion_vault_config_v1');
-      return saved ? JSON.parse(saved) : DEFAULT_VAULT_CONFIG;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_VAULT_CONFIG,
+          ...parsed,
+          lockEnabled:
+            explicitLockPref !== null
+              ? explicitLockPref !== 'false'
+              : parsed.lockEnabled !== false,
+        };
+      }
+      return {
+        ...DEFAULT_VAULT_CONFIG,
+        lockEnabled: explicitLockPref !== null ? explicitLockPref !== 'false' : true,
+      };
     } catch {
       return DEFAULT_VAULT_CONFIG;
     }
   });
+
+  const isLockEnabled = vaultConfig.lockEnabled !== false;
 
   const [transactions, setTransactions] = useState<TransactionRecord[]>(() => {
     try {
@@ -377,11 +410,18 @@ export default function App() {
 
   useEffect(() => {
     try {
+      if (!isLockEnabled) {
+        localStorage.setItem('uchsar_vault_is_locked', 'false');
+        if (isVaultLocked) {
+          setIsVaultLocked(false);
+        }
+        return;
+      }
       localStorage.setItem('uchsar_vault_is_locked', isVaultLocked ? 'true' : 'false');
     } catch {
       // ignore
     }
-  }, [isVaultLocked]);
+  }, [isVaultLocked, isLockEnabled]);
 
   const handleUnlockVault = useCallback(() => {
     try {
@@ -398,6 +438,7 @@ export default function App() {
   // Immediate Lock on Back Key Exit, Re-Entry (bfcache/pageshow), App Switch, or Screen Off
   useEffect(() => {
     const lockImmediately = () => {
+      if (!isLockEnabled) return;
       try {
         localStorage.setItem('uchsar_vault_is_locked', 'true');
       } catch {
@@ -409,6 +450,7 @@ export default function App() {
     };
 
     const handleVisibilityChange = () => {
+      if (!isLockEnabled) return;
       if (document.visibilityState === 'hidden') {
         lockImmediately();
       } else if (document.visibilityState === 'visible') {
@@ -423,6 +465,7 @@ export default function App() {
     };
 
     const handlePageShow = (event: PageTransitionEvent) => {
+      if (!isLockEnabled) return;
       // If restored from back-forward cache (e.g. after Back key exit) or marked locked, lock immediately
       if (event.persisted) {
         lockImmediately();
@@ -449,11 +492,14 @@ export default function App() {
         }
         return;
       }
-      // Lock immediately when backing out of the app
-      lockImmediately();
+      // Lock immediately when backing out of the app (only if App Lock is enabled)
+      if (isLockEnabled) {
+        lockImmediately();
+      }
     };
 
     const handleWindowFocus = () => {
+      if (!isLockEnabled) return;
       try {
         if (localStorage.getItem('uchsar_vault_is_locked') !== 'false') {
           setIsVaultLocked(true);
@@ -482,11 +528,11 @@ export default function App() {
       window.removeEventListener('focus', handleWindowFocus);
       window.removeEventListener('beforeunload', lockImmediately);
     };
-  }, [modalOpen, showInstallGuideModal]);
+  }, [modalOpen, showInstallGuideModal, isLockEnabled]);
 
   // Idle Auto-Lock
   useEffect(() => {
-    if (isVaultLocked) return;
+    if (!isLockEnabled || isVaultLocked) return;
     const timeoutMs = Math.max(1, vaultConfig.autoLockMinutes || 15) * 60 * 1000;
     let timer: ReturnType<typeof setTimeout>;
     const resetTimer = () => {
@@ -500,7 +546,7 @@ export default function App() {
       clearTimeout(timer);
       events.forEach((ev) => window.removeEventListener(ev, resetTimer));
     };
-  }, [vaultConfig.autoLockMinutes, isVaultLocked]);
+  }, [vaultConfig.autoLockMinutes, isVaultLocked, isLockEnabled]);
 
   // Firebase Auth
   useEffect(() => {
@@ -595,10 +641,26 @@ export default function App() {
           }
           return;
         }
-        setVaultConfig((prev) => ({
-          ...prev,
-          ...(snapshot.data() as VaultConfig),
-        }));
+        const cloudData = snapshot.data() as VaultConfig;
+        const rawPasskey = String(cloudData.passkeyId || DEFAULT_VAULT_CONFIG.passkeyId);
+        const cloudLockDisabled = rawPasskey.startsWith('DISABLED::');
+        const cleanPasskey = cloudLockDisabled ? rawPasskey.slice('DISABLED::'.length) : rawPasskey;
+        setVaultConfig((prev) => {
+          let explicitLocal: string | null = null;
+          try {
+            explicitLocal = localStorage.getItem('uchsar_app_lock_enabled_v1');
+          } catch {
+            // ignore
+          }
+          const resolvedLockEnabled =
+            explicitLocal !== null ? explicitLocal !== 'false' : !cloudLockDisabled;
+          return {
+            ...prev,
+            ...cloudData,
+            passkeyId: cleanPasskey || prev.passkeyId,
+            lockEnabled: resolvedLockEnabled,
+          };
+        });
       },
       (err) => {
         if (typeof navigator !== 'undefined' && !navigator.onLine) return;
@@ -1458,6 +1520,7 @@ export default function App() {
         monthlySalarySgd: vaultConfig.monthlySalarySgd,
         monthlyRentSgd: vaultConfig.monthlyRentSgd,
         monthlySavingsTargetSgd: vaultConfig.monthlySavingsTargetSgd,
+        lockEnabled: vaultConfig.lockEnabled !== false,
         biometricEnabled: vaultConfig.biometricEnabled,
         passkeyId: vaultConfig.passkeyId,
         pinCode: vaultConfig.pinCode,
@@ -1648,6 +1711,18 @@ export default function App() {
       );
 
       // 1. Update local state & localStorage IMMEDIATELY (0ms latency)
+      const restoredLockEnabled =
+        typeof parsed.vaultConfig?.lockEnabled === 'boolean'
+          ? parsed.vaultConfig.lockEnabled
+          : vaultConfig.lockEnabled !== false;
+      try {
+        localStorage.setItem(
+          'uchsar_app_lock_enabled_v1',
+          restoredLockEnabled ? 'true' : 'false'
+        );
+      } catch {
+        // ignore
+      }
       setVaultConfig((prev) => {
         const updated = {
           ...prev,
@@ -1656,6 +1731,7 @@ export default function App() {
           monthlySalarySgd: nextSalary,
           monthlyRentSgd: nextRent,
           monthlySavingsTargetSgd: nextSavingsTarget,
+          lockEnabled: restoredLockEnabled,
         };
         try {
           localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
@@ -1791,15 +1867,83 @@ export default function App() {
     }
   };
 
+  const handleToggleAppLock = (enableLock: boolean) => {
+    try {
+      localStorage.setItem('uchsar_app_lock_enabled_v1', enableLock ? 'true' : 'false');
+      if (!enableLock) {
+        localStorage.setItem('uchsar_vault_is_locked', 'false');
+      }
+    } catch {
+      // ignore
+    }
+
+    if (!enableLock) {
+      setIsVaultLocked(false);
+    }
+
+    const basePasskey = (vaultConfig.passkeyId || DEFAULT_VAULT_CONFIG.passkeyId).replace(
+      /^DISABLED::/,
+      ''
+    );
+
+    setVaultConfig((prev) => {
+      const updated: VaultConfig = {
+        ...prev,
+        lockEnabled: enableLock,
+        passkeyId: basePasskey,
+      };
+      try {
+        localStorage.setItem('merlion_vault_config_v1', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
+      return updated;
+    });
+
+    showToast(
+      enableLock
+        ? 'Application သော့ခတ်စနစ် (App Lock) ကို ဖွင့်လိုက်ပါပြီ'
+        : 'Application သော့ခတ်စနစ် (App Lock) ကို ပိတ်လိုက်ပါပြီ (သော့ဖွင့်ရန် မလိုတော့ပါ)'
+    );
+
+    if (currentUser) {
+      const path = `vaultConfigs/${currentUser.uid}`;
+      const cloudPasskey = enableLock
+        ? basePasskey.slice(0, 256)
+        : `DISABLED::${basePasskey}`.slice(0, 256);
+      updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
+        biometricEnabled: vaultConfig.biometricEnabled,
+        passkeyId: cloudPasskey,
+        pinCode: (vaultConfig.pinCode || '2026').slice(0, 64),
+        autoLockMinutes: Math.max(1, Math.min(1440, Number(autoLockDraft) || 15)),
+        updatedAt: serverTimestamp(),
+      }).catch((err) => {
+        if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, path);
+        } catch {
+          // ignore
+        }
+      });
+    }
+  };
+
   const handleRegisterPasskey = async () => {
     const uid = currentUser?.uid || 'local_sg_owner';
     const email = currentUser?.email || 'sg-user@merlionvault.app';
     const result = await registerBiometricPasskey(uid, email);
     const nextPasskeyId = result.credentialId.slice(0, 256);
 
+    try {
+      localStorage.setItem('uchsar_app_lock_enabled_v1', 'true');
+    } catch {
+      // ignore
+    }
+
     setVaultConfig((prev) => {
       const updated = {
         ...prev,
+        lockEnabled: true,
         biometricEnabled: true,
         passkeyId: nextPasskeyId,
       };
@@ -1886,9 +2030,13 @@ export default function App() {
     // 2. Sync to Firestore in background if signed in
     if (currentUser) {
       const path = `vaultConfigs/${currentUser.uid}`;
+      const basePasskey = (vaultConfig.passkeyId || 'sim_bio_default').replace(/^DISABLED::/, '');
+      const cloudPasskey = isLockEnabled
+        ? basePasskey.slice(0, 256)
+        : `DISABLED::${basePasskey}`.slice(0, 256);
       updateDoc(doc(db, 'vaultConfigs', currentUser.uid), {
         biometricEnabled: vaultConfig.biometricEnabled,
-        passkeyId: vaultConfig.passkeyId || 'sim_bio_default',
+        passkeyId: cloudPasskey,
         pinCode: nextPinToSave,
         autoLockMinutes: sanitizedMinutes,
         updatedAt: serverTimestamp(),
@@ -1903,7 +2051,7 @@ export default function App() {
     }
   };
 
-  if (isVaultLocked) {
+  if (isLockEnabled && isVaultLocked) {
     return (
       <BiometricLockScreen
         passkeyId={vaultConfig.passkeyId}
@@ -2080,13 +2228,26 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setIsVaultLocked(true)}
+                onClick={() => {
+                  if (isLockEnabled) {
+                    setIsVaultLocked(true);
+                  } else {
+                    setActiveSection('settings');
+                    showToast('App Lock ပိတ်ထားပါသည် — ဆက်တင်တွင် ပြန်ဖွင့်နိုင်ပါသည်');
+                  }
+                }}
                 aria-label="Lock application"
-                title="သော့ခတ်ရန်"
+                title={isLockEnabled ? 'သော့ခတ်ရန်' : 'App Lock ပိတ်ထားသည် (ဆက်တင်သို့သွားရန်)'}
                 className="h-8 px-2.5 rounded-xl neu-btn text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <Lock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                <span className="hidden sm:inline">Lock</span>
+                <Lock
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    isLockEnabled
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-slate-400 dark:text-slate-500'
+                  }`}
+                />
+                <span className="hidden sm:inline">{isLockEnabled ? 'Lock' : 'Lock Off'}</span>
               </button>
             </div>
           </div>
@@ -4013,10 +4174,74 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Card 2: Biometric, PIN & Cloud Sync */}
+              {/* Card 2: Application Lock On/Off, Biometric, PIN & Cloud Sync */}
               <div className="neu-card rounded-3xl p-6 space-y-6">
+                {/* Row 0: Master Application Lock On / Off Setting */}
+                <div className="p-4 sm:p-5 rounded-2xl neu-inset space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Lock
+                          className={`w-4 h-4 shrink-0 ${
+                            isLockEnabled
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-slate-400 dark:text-slate-500'
+                          }`}
+                        />
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-slate-100">
+                          Application သော့ခတ်စနစ် (App Lock On / Off)
+                        </h3>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-xl text-[11px] font-bold ${
+                            isLockEnabled
+                              ? 'neu-emerald-well text-emerald-700 dark:text-emerald-300'
+                              : 'neu-card-sm text-slate-500 dark:text-slate-400'
+                          }`}
+                        >
+                          {isLockEnabled ? 'ဖွင့်ထားသည် (ON)' : 'ပိတ်ထားသည် (OFF)'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                        {isLockEnabled
+                          ? 'လက်ရှိတွင် App Lock ဖွင့်ထားပါသည် — App မှထွက်လျှင် သို့မဟုတ် ပြန်ဝင်လျှင် PIN / Biometric ဖြင့် သော့ခတ်ပေးပါမည်။'
+                          : 'လက်ရှိတွင် App Lock ပိတ်ထားပါသည် — PIN သို့မဟုတ် Biometric ရိုက်ထည့်ရန် မလိုဘဲ App ကို တိုက်ရိုက် အသုံးပြုနိုင်ပါသည်။'}
+                      </p>
+                    </div>
+
+                    {/* Neumorphic Segmented On / Off Switch */}
+                    <div className="flex items-center gap-2 p-1.5 rounded-2xl neu-card-sm shrink-0 self-start sm:self-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleAppLock(true)}
+                        className={`min-h-[38px] px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          isLockEnabled
+                            ? 'neu-btn-primary'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                        }`}
+                      >
+                        သုံးမည် (Lock ဖွင့်မည်)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleAppLock(false)}
+                        className={`min-h-[38px] px-4 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                          !isLockEnabled
+                            ? 'neu-inset-sm text-amber-700 dark:text-amber-300'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                        }`}
+                      >
+                        မသုံးပါ (Lock ပိတ်မည်)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Row 1: Biometric Lock */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-300/60 dark:border-slate-800">
+                <div
+                  className={`flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-300/60 dark:border-slate-800 transition-opacity ${
+                    !isLockEnabled ? 'opacity-60' : ''
+                  }`}
+                >
                   <div>
                     <div className="text-sm font-bold">Biometric သော့ခတ်စနစ် (TouchID / FaceID)</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -4036,7 +4261,12 @@ export default function App() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setIsVaultLocked(true)}
+                      onClick={() => {
+                        if (!isLockEnabled) {
+                          handleToggleAppLock(true);
+                        }
+                        setIsVaultLocked(true);
+                      }}
                       className="min-h-[40px] px-4 py-2 rounded-2xl neu-btn text-xs font-semibold cursor-pointer"
                     >
                       ယခု သော့ခတ်မည်
@@ -4047,7 +4277,9 @@ export default function App() {
                 {/* Row 2: PIN Setting */}
                 <form
                   onSubmit={handleSaveSecuritySettings}
-                  className="space-y-3 pb-5 border-b border-slate-300/60 dark:border-slate-800"
+                  className={`space-y-3 pb-5 border-b border-slate-300/60 dark:border-slate-800 transition-opacity ${
+                    !isLockEnabled ? 'opacity-60' : ''
+                  }`}
                 >
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-3">
